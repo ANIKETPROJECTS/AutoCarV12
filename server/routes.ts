@@ -4405,11 +4405,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Can only generate invoice for completed service visits" });
       }
       
-      // Fetch all vehicles for this customer
+      // Fetch only the specific vehicle for this service visit
       const customer = serviceVisit.customerId as any;
-      const vehicles = await RegistrationVehicle.find({ 
-        customerId: customer._id.toString() 
-      }).lean();
+      const serviceVehicle = await RegistrationVehicle.findOne({ 
+        customerId: customer._id.toString(),
+        vehicleNumber: serviceVisit.vehicleReg
+      }).lean() as any;
+      
+      if (!serviceVehicle) {
+        return res.status(404).json({ error: "Vehicle not found for this service visit" });
+      }
       
       // Build customer details object with ALL fields
       const customerDetails = {
@@ -4429,22 +4434,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         registrationDate: customer.createdAt,
       };
       
-      // Build vehicle details array with ALL fields
-      const vehicleDetails = vehicles.map(vehicle => ({
-        vehicleId: vehicle.vehicleId,
-        vehicleNumber: vehicle.vehicleNumber,
-        vehicleBrand: vehicle.vehicleBrand,
-        vehicleModel: vehicle.vehicleModel,
-        customModel: vehicle.customModel,
-        variant: vehicle.variant,
-        color: vehicle.color,
-        yearOfPurchase: vehicle.yearOfPurchase,
-        vehiclePhoto: vehicle.vehiclePhoto,
-        isNewVehicle: vehicle.isNewVehicle,
-        chassisNumber: vehicle.chassisNumber,
-        selectedParts: vehicle.selectedParts,
-        vehicleRegistrationDate: vehicle.createdAt,
-      }));
+      // Build vehicle details array with only the service vehicle
+      const vehicleDetails = [{
+        vehicleId: serviceVehicle.vehicleId,
+        vehicleNumber: serviceVehicle.vehicleNumber,
+        vehicleBrand: serviceVehicle.vehicleBrand,
+        vehicleModel: serviceVehicle.vehicleModel,
+        customModel: serviceVehicle.customModel,
+        variant: serviceVehicle.variant,
+        color: serviceVehicle.color,
+        yearOfPurchase: serviceVehicle.yearOfPurchase,
+        vehiclePhoto: serviceVehicle.vehiclePhoto,
+        isNewVehicle: serviceVehicle.isNewVehicle,
+        chassisNumber: serviceVehicle.chassisNumber,
+        selectedParts: serviceVehicle.selectedParts,
+        vehicleRegistrationDate: serviceVehicle.createdAt,
+      }];
       
       // Calculate subtotal
       const subtotal = items.reduce((sum: number, item: any) => sum + item.total, 0);
@@ -4518,7 +4523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         action: 'create',
         resource: 'other',
         resourceId: invoice._id.toString(),
-        description: `Created invoice ${invoice.invoiceNumber} for ${customerDetails.fullName} with ${vehicleDetails.length} vehicle(s)`,
+        description: `Created invoice ${invoice.invoiceNumber} for ${customerDetails.fullName} - Vehicle: ${serviceVehicle.vehicleNumber}`,
         ipAddress: req.ip,
       });
       
