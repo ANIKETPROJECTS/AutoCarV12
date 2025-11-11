@@ -48,12 +48,12 @@ const customerFormSchema = z.object({
   mobileNumber: z.string().min(10, "Mobile number must be at least 10 digits"),
   alternativeNumber: z.string().optional(),
   email: z.union([z.string().email("Invalid email address"), z.literal("")]),
-  address: z.string().min(1, "Address is required"),
-  city: z.string().min(1, "City is required"),
-  taluka: z.string().min(1, "Taluka is required"),
-  district: z.string().min(1, "District is required"),
-  state: z.string().min(1, "State is required"),
-  pinCode: z.string().min(6, "Pin code must be 6 digits"),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  taluka: z.string().optional(),
+  district: z.string().optional(),
+  state: z.string().optional(),
+  pinCode: z.string().optional(),
   referralSource: z.string().optional(),
   customReferralSource: z.string().optional(),
   referralPersonName: z.string().optional(),
@@ -886,9 +886,9 @@ export default function CustomerRegistration() {
                     name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Address *</FormLabel>
+                        <FormLabel>Address</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Street address" data-testid="input-address" />
+                          <Input {...field} placeholder="Street address (optional)" data-testid="input-address" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -901,9 +901,9 @@ export default function CustomerRegistration() {
                       name="city"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>City/Village *</FormLabel>
+                          <FormLabel>City/Village</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="City name" data-testid="input-city" />
+                            <Input {...field} placeholder="City name (optional)" data-testid="input-city" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -915,9 +915,9 @@ export default function CustomerRegistration() {
                       name="taluka"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Taluka *</FormLabel>
+                          <FormLabel>Taluka</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Taluka name" data-testid="input-taluka" />
+                            <Input {...field} placeholder="Taluka name (optional)" data-testid="input-taluka" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -929,9 +929,9 @@ export default function CustomerRegistration() {
                       name="district"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>District *</FormLabel>
+                          <FormLabel>District</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="District name" data-testid="input-district" />
+                            <Input {...field} placeholder="District name (optional)" data-testid="input-district" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -945,11 +945,11 @@ export default function CustomerRegistration() {
                       name="state"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>State *</FormLabel>
+                          <FormLabel>State</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger data-testid="select-state">
-                                <SelectValue placeholder="Select state" />
+                                <SelectValue placeholder="Select state (optional)" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -970,9 +970,9 @@ export default function CustomerRegistration() {
                       name="pinCode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Pin Code *</FormLabel>
+                          <FormLabel>Pin Code</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="6-digit pin code" data-testid="input-pincode" />
+                            <Input {...field} placeholder="6-digit pin code (optional)" data-testid="input-pincode" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

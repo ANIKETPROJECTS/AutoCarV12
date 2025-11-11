@@ -5,12 +5,12 @@ export const insertCustomerSchema = z.object({
   mobileNumber: z.string().min(10, "Mobile number must be at least 10 digits"),
   alternativeNumber: z.string().optional(),
   email: z.union([z.string().email("Invalid email address"), z.literal("")]),
-  address: z.string().min(1, "Address is required"),
-  city: z.string().min(1, "City is required"),
-  taluka: z.string().min(1, "Taluka is required"),
-  district: z.string().min(1, "District is required"),
-  state: z.string().min(1, "State is required"),
-  pinCode: z.string().min(6, "Pin code must be 6 digits"),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  taluka: z.string().optional(),
+  district: z.string().optional(),
+  state: z.string().optional(),
+  pinCode: z.string().optional(),
   referralSource: z.string().optional(),
 });
 
