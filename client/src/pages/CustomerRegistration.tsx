@@ -1164,7 +1164,7 @@ export default function CustomerRegistration() {
                               field.onChange(value);
                               setSelectedModel(value);
                             }} 
-                            defaultValue={field.value}
+                            value={field.value}
                             disabled={!selectedBrand}
                           >
                             <FormControl>
