@@ -154,7 +154,9 @@ export default function CustomerRegistration() {
   const [registeredVehicles, setRegisteredVehicles] = useState<any[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("Other");
   const [selectedModel, setSelectedModel] = useState<string>("Other");
-  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [availableModels, setAvailableModels] = useState<string[]>(
+    getModelsByBrand("Other").map(m => m.name)
+  );
   const [availableParts, setAvailableParts] = useState<any[]>([]);
 
   const customerForm = useForm<CustomerFormData>({
