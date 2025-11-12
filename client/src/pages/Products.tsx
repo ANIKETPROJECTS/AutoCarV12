@@ -48,12 +48,14 @@ export default function Products() {
   const [formData, setFormData] = useState({
     brand: "",
     model: "",
+    productName: "",
+    barcode: "",
+    barcodeImage: "",
     mrp: "",
     sellingPrice: "",
     discount: "",
     stockQty: "",
     minStockLevel: "",
-    barcode: "",
     warranty: "",
     warrantyCustom: "",
     images: [] as string[],
@@ -205,12 +207,14 @@ export default function Products() {
     setFormData({
       brand: "",
       model: "",
+      productName: "",
+      barcode: "",
+      barcodeImage: "",
       mrp: "",
       sellingPrice: "",
       discount: "",
       stockQty: "",
       minStockLevel: "",
-      barcode: "",
       warranty: "",
       warrantyCustom: "",
       images: [],
@@ -242,6 +246,33 @@ export default function Products() {
     });
     
     e.target.value = '';
+  };
+
+  const handleBarcodeImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: `${file.name} exceeds 5MB limit`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setFormData(prev => ({ ...prev, barcodeImage: base64String }));
+    };
+    reader.readAsDataURL(file);
+    
+    e.target.value = '';
+  };
+
+  const removeBarcodeImage = () => {
+    setFormData({ ...formData, barcodeImage: "" });
   };
 
   const removeImage = (index: number) => {
@@ -283,12 +314,13 @@ export default function Products() {
     const exportData = products.map(product => ({
       brand: product.brand,
       model: product.model || "",
+      productName: product.productName || "",
+      barcode: product.barcode || "",
       mrp: product.mrp,
       sellingPrice: product.sellingPrice,
       discount: product.discount,
       stockQty: product.stockQty,
       minStockLevel: product.minStockLevel,
-      barcode: product.barcode || "",
       warranty: product.warranty || "",
       status: product.status,
       modelCompatibility: Array.isArray(product.modelCompatibility) ? product.modelCompatibility.join(", ") : "",
@@ -323,12 +355,13 @@ export default function Products() {
         const productsData = jsonData.map((row: any) => ({
           brand: row.brand || row.Brand,
           model: row.model || row.Model || "",
+          productName: row.productName || row.ProductName || row.product_name || "",
+          barcode: row.barcode || row.Barcode || "",
           mrp: row.mrp || row.MRP || 0,
           sellingPrice: row.sellingPrice || row.SellingPrice || row.selling_price || 0,
           discount: row.discount || row.Discount || 0,
           stockQty: row.stockQty || row.StockQty || row.stock_qty || 0,
           minStockLevel: row.minStockLevel || row.MinStockLevel || row.min_stock_level || 10,
-          barcode: row.barcode || row.Barcode || "",
           warranty: row.warranty || row.Warranty || "",
           modelCompatibility: row.modelCompatibility 
             ? (typeof row.modelCompatibility === 'string' ? row.modelCompatibility.split(",").map((s: string) => s.trim()) : [])
@@ -386,15 +419,26 @@ export default function Products() {
     
     const finalWarranty = formData.warranty === 'Other' ? formData.warrantyCustom : formData.warranty;
     
+    if (!formData.productName) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter the product name",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const productData = {
       brand: formData.brand,
       model: formData.model,
+      productName: formData.productName,
+      barcode: formData.barcode,
+      barcodeImage: formData.barcodeImage,
       mrp,
       sellingPrice,
       discount,
       stockQty,
       minStockLevel,
-      barcode: formData.barcode,
       warranty: finalWarranty,
       images: formData.images.filter(img => img.trim() !== ""),
       modelCompatibility: formData.modelCompatibility.filter(m => m.trim() !== ""),
@@ -415,12 +459,14 @@ export default function Products() {
     setFormData({
       brand: product.brand || "",
       model: product.model || "",
+      productName: product.productName || "",
+      barcode: product.barcode || "",
+      barcodeImage: product.barcodeImage || "",
       mrp: product.mrp?.toString() || "",
       sellingPrice: product.sellingPrice?.toString() || "",
       discount: product.discount?.toString() || "0",
       stockQty: product.stockQty?.toString() || "",
       minStockLevel: product.minStockLevel?.toString() || "",
-      barcode: product.barcode || "",
       warranty: isStandardWarranty ? product.warranty : 'Other',
       warrantyCustom: isStandardWarranty ? '' : (product.warranty || ''),
       images: (product.images && product.images.length > 0) ? product.images : [],
@@ -474,18 +520,29 @@ export default function Products() {
       return;
     }
     
+    if (!formData.productName) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter the product name",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (selectedProduct) {
       const finalWarranty = formData.warranty === 'Other' ? formData.warrantyCustom : formData.warranty;
       
       const productData = {
         brand: formData.brand,
         model: formData.model,
+        productName: formData.productName,
+        barcode: formData.barcode,
+        barcodeImage: formData.barcodeImage,
         mrp,
         sellingPrice,
         discount,
         stockQty,
         minStockLevel,
-        barcode: formData.barcode,
         warranty: finalWarranty,
         images: formData.images.filter(img => img.trim() !== ""),
         modelCompatibility: formData.modelCompatibility.filter(m => m.trim() !== ""),
@@ -602,6 +659,18 @@ export default function Products() {
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="productName">Product Name *</Label>
+        <Input
+          id="productName"
+          value={formData.productName}
+          onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+          required
+          data-testid="input-product-name"
+          placeholder="Enter product name"
+        />
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="barcode">Barcode/QR Code</Label>
         <div className="relative">
           <Barcode className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -613,6 +682,37 @@ export default function Products() {
             data-testid="input-product-barcode"
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Barcode Image (Optional)</Label>
+        <div className="flex gap-2">
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={handleBarcodeImageUpload}
+            data-testid="input-barcode-image"
+          />
+        </div>
+        {formData.barcodeImage && (
+          <div className="relative inline-block mt-2">
+            <img 
+              src={formData.barcodeImage} 
+              alt="Barcode" 
+              className="w-32 h-32 object-contain rounded-md border"
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute top-1 right-1 h-6 w-6"
+              onClick={removeBarcodeImage}
+              data-testid="button-remove-barcode-image"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -746,6 +846,70 @@ export default function Products() {
       </div>
 
       <div className="space-y-2">
+        <Label>Product Variants</Label>
+        {formData.variants.map((variant, index) => (
+          <div key={index} className="space-y-2">
+            <div className="flex gap-2">
+              <Input
+                value={variant.size}
+                onChange={(e) => updateVariant(index, 'size', e.target.value)}
+                placeholder="Size"
+                data-testid={`input-variant-size-${index}`}
+              />
+              <Select
+                value={variant.color}
+                onValueChange={(value) => updateVariant(index, 'color', value)}
+              >
+                <SelectTrigger data-testid={`select-variant-color-${index}`}>
+                  <SelectValue placeholder="Select color" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Red">Red</SelectItem>
+                  <SelectItem value="Blue">Blue</SelectItem>
+                  <SelectItem value="Black">Black</SelectItem>
+                  <SelectItem value="White">White</SelectItem>
+                  <SelectItem value="Silver">Silver</SelectItem>
+                  <SelectItem value="Gray">Gray</SelectItem>
+                  <SelectItem value="Green">Green</SelectItem>
+                  <SelectItem value="Yellow">Yellow</SelectItem>
+                  <SelectItem value="Other">Other (Custom)</SelectItem>
+                </SelectContent>
+              </Select>
+              {formData.variants.length > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => removeVariant(index)}
+                  data-testid={`button-remove-variant-${index}`}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            {variant.color === 'Other' && (
+              <Input
+                value={variant.colorCustom}
+                onChange={(e) => updateVariant(index, 'colorCustom', e.target.value)}
+                placeholder="Enter custom color"
+                data-testid={`input-variant-color-custom-${index}`}
+              />
+            )}
+          </div>
+        ))}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={addVariant}
+          data-testid="button-add-variant"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Variant
+        </Button>
+      </div>
+
+      <div className="space-y-2">
         <Label>Model Compatibility</Label>
         <p className="text-xs text-muted-foreground">
           Select vehicle brands and models this product is compatible with
@@ -837,70 +1001,6 @@ export default function Products() {
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Another Vehicle
-        </Button>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Product Variants</Label>
-        {formData.variants.map((variant, index) => (
-          <div key={index} className="space-y-2">
-            <div className="flex gap-2">
-              <Input
-                value={variant.size}
-                onChange={(e) => updateVariant(index, 'size', e.target.value)}
-                placeholder="Size"
-                data-testid={`input-variant-size-${index}`}
-              />
-              <Select
-                value={variant.color}
-                onValueChange={(value) => updateVariant(index, 'color', value)}
-              >
-                <SelectTrigger data-testid={`select-variant-color-${index}`}>
-                  <SelectValue placeholder="Select color" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Red">Red</SelectItem>
-                  <SelectItem value="Blue">Blue</SelectItem>
-                  <SelectItem value="Black">Black</SelectItem>
-                  <SelectItem value="White">White</SelectItem>
-                  <SelectItem value="Silver">Silver</SelectItem>
-                  <SelectItem value="Gray">Gray</SelectItem>
-                  <SelectItem value="Green">Green</SelectItem>
-                  <SelectItem value="Yellow">Yellow</SelectItem>
-                  <SelectItem value="Other">Other (Custom)</SelectItem>
-                </SelectContent>
-              </Select>
-              {formData.variants.length > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => removeVariant(index)}
-                  data-testid={`button-remove-variant-${index}`}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-            {variant.color === 'Other' && (
-              <Input
-                value={variant.colorCustom}
-                onChange={(e) => updateVariant(index, 'colorCustom', e.target.value)}
-                placeholder="Enter custom color"
-                data-testid={`input-variant-color-custom-${index}`}
-              />
-            )}
-          </div>
-        ))}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={addVariant}
-          data-testid="button-add-variant"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Variant
         </Button>
       </div>
 

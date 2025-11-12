@@ -20,6 +20,7 @@ The application follows a client-server architecture.
     - Customer and vehicle registration.
     - Multi-stage service visit tracking.
     - Inventory management with low stock alerts and Excel import/export.
+    - **Product Management**: Products include mandatory Product Name field and optional Barcode Image upload (with preview and removal). Model Compatibility section positioned at bottom of form for better UX flow. Import/export utilities support productName and barcodeImage fields.
     - **Vehicle Compatibility Tracking**: Products can be assigned compatible vehicle brands/models via dropdown selection, with support for custom model entries. During vehicle registration, only compatible products are automatically displayed.
     - Employee management (attendance, leaves, task assignment).
     - Order processing with invoice generation and WhatsApp delivery.
