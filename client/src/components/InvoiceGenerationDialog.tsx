@@ -375,7 +375,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-7xl max-h-[95vh] overflow-y-auto" data-testid="dialog-generate-invoice">
+      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-7xl max-h-[80vh] sm:max-h-[90vh] lg:max-h-[95vh] overflow-y-auto" data-testid="dialog-generate-invoice">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Receipt className="h-5 w-5" />
