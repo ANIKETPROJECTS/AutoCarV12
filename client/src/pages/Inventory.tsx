@@ -285,7 +285,7 @@ export default function Inventory() {
   };
 
   const filteredTransactions = transactions.filter((transaction: any) => {
-    const productName = transaction.productId?.productName || "";
+    const productName = transaction.productId?.productName || transaction.productId?.name || transaction.productId?.model || "";
     const reason = transaction.reason || "";
     return productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
            reason.toLowerCase().includes(searchTerm.toLowerCase());
@@ -336,7 +336,7 @@ export default function Inventory() {
                       <SelectContent>
                         {products.map((product: any) => (
                           <SelectItem key={product._id} value={product._id}>
-                            {product.productName} - {product.brand}
+                            {product.productName || product.name || product.model || "Unknown"} - {product.brand}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -475,7 +475,7 @@ export default function Inventory() {
                     <SelectContent>
                       {products.map((product: any) => (
                         <SelectItem key={product._id} value={product._id}>
-                          {product.productName} - {product.brand}
+                          {product.productName || product.name || product.model || "Unknown"} - {product.brand}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -617,7 +617,7 @@ export default function Inventory() {
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <CardTitle className="text-base line-clamp-2">{product.productName}</CardTitle>
+                          <CardTitle className="text-base line-clamp-2">{product.productName || product.name || product.model || "Unknown"}</CardTitle>
                           <p className="text-sm text-muted-foreground mt-1">{product.brand}</p>
                         </div>
                         <Badge 
@@ -697,7 +697,7 @@ export default function Inventory() {
             columns={[
               { 
                 header: "Product", 
-                accessor: (row) => row.productId?.productName || "N/A",
+                accessor: (row) => row.productId?.productName || row.productId?.name || row.productId?.model || "N/A",
               },
               {
                 header: "Type",
@@ -754,7 +754,7 @@ export default function Inventory() {
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <CardTitle className="text-lg">{product.productName}</CardTitle>
+                        <CardTitle className="text-lg">{product.productName || product.name || product.model || "Unknown"}</CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">{product.brand}</p>
                       </div>
                       <AlertTriangle className="h-5 w-5 text-orange-500" />
@@ -807,7 +807,7 @@ export default function Inventory() {
             columns={[
               { 
                 header: "Product", 
-                accessor: (row) => row.productId?.productName || "N/A",
+                accessor: (row) => row.productId?.productName || row.productId?.name || row.productId?.model || "N/A",
               },
               { 
                 header: "Quantity", 
@@ -916,7 +916,7 @@ export default function Inventory() {
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Product:</span>
                         <span className="text-sm font-medium">
-                          {selectedTransaction.productId?.productName || "N/A"}
+                          {selectedTransaction.productId?.productName || selectedTransaction.productId?.name || selectedTransaction.productId?.model || "N/A"}
                         </span>
                       </div>
                       <div className="flex justify-between">
