@@ -338,8 +338,8 @@ export default function Inventory() {
                       <SelectTrigger data-testid="select-product">
                         <SelectValue placeholder="Select product" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <div className="px-2 pb-2 sticky top-0 bg-popover">
+                      <SelectContent className="p-0">
+                        <div className="sticky top-0 z-10 bg-popover p-2 border-b">
                           <div className="relative">
                             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
@@ -500,8 +500,8 @@ export default function Inventory() {
                     <SelectTrigger data-testid="select-return-product">
                       <SelectValue placeholder="Select product" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <div className="px-2 pb-2 sticky top-0 bg-popover">
+                    <SelectContent className="p-0">
+                      <div className="sticky top-0 z-10 bg-popover p-2 border-b">
                         <div className="relative">
                           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
