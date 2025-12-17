@@ -33,6 +33,7 @@ import { VEHICLE_DATA } from "@shared/vehicleData";
 
 export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("brand-asc");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isStockDialogOpen, setIsStockDialogOpen] = useState(false);
@@ -618,6 +619,25 @@ export default function Products() {
       (product.model && product.model.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (product.barcode && product.barcode.includes(searchTerm));
     return matchesSearch;
+  }).sort((a: any, b: any) => {
+    switch (sortBy) {
+      case "brand-asc":
+        return a.brand.localeCompare(b.brand);
+      case "brand-desc":
+        return b.brand.localeCompare(a.brand);
+      case "stock-high":
+        return (b.stockQty || 0) - (a.stockQty || 0);
+      case "stock-low":
+        return (a.stockQty || 0) - (b.stockQty || 0);
+      case "price-high":
+        return (b.sellingPrice || 0) - (a.sellingPrice || 0);
+      case "price-low":
+        return (a.sellingPrice || 0) - (b.sellingPrice || 0);
+      case "category-asc":
+        return (a.category || "").localeCompare(b.category || "");
+      default:
+        return 0;
+    }
   });
 
   const getStatusBadge = (status: string, stock: number) => {
@@ -1135,6 +1155,20 @@ export default function Products() {
             data-testid="input-search"
           />
         </div>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-full sm:w-48" data-testid="select-sort">
+            <SelectValue placeholder="Sort by..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="brand-asc">Brand (A-Z)</SelectItem>
+            <SelectItem value="brand-desc">Brand (Z-A)</SelectItem>
+            <SelectItem value="stock-high">Stock Level (High to Low)</SelectItem>
+            <SelectItem value="stock-low">Stock Level (Low to High)</SelectItem>
+            <SelectItem value="price-high">Price (High to Low)</SelectItem>
+            <SelectItem value="price-low">Price (Low to High)</SelectItem>
+            <SelectItem value="category-asc">Category (A-Z)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {filteredProducts.length > 0 ? (
