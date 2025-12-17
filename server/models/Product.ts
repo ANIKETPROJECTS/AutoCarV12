@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema({
   brand: { type: String, required: true },
   model: { type: String, default: '' },
   productName: { type: String, required: true },
+  productId: { type: String },
   barcode: { type: String },
   barcodeImage: { type: String },
   modelCompatibility: [String],

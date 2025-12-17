@@ -76,6 +76,7 @@ function buildProductResponse(product: any) {
     _id: product._id, // Keep original _id for backward compatibility
     id: product._id?.toString() || product.id,
     productName: productName,
+    productId: product.productId,
     name: productName, // For backward compatibility
     category: displayCategory, // Use existing or derive from brand and model
     brand: product.brand,
