@@ -1903,7 +1903,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/inventory-transactions/:id", requireAuth, requirePermission('inventory', 'delete'), async (req, res) => {
+  app.delete("/api/inventory-transactions/:id", requireAuth, requirePermission('inventory', 'update'), async (req, res) => {
     try {
       const transaction = await InventoryTransaction.findById(req.params.id);
       if (!transaction) {
