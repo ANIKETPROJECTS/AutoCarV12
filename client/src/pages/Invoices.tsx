@@ -14,6 +14,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { FileText, DollarSign, CheckCircle, XCircle, Clock, Filter, Eye, CreditCard, Download, Trash2, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { PaymentRecordingDialog } from "@/components/PaymentRecordingDialog";
+import { InvoiceGenerationDialog } from "@/components/InvoiceGenerationDialog";
 
 interface Invoice {
   _id: string;
@@ -71,6 +72,8 @@ export default function Invoices() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'UPI' | 'Cash' | 'Card' | 'Net Banking' | 'Cheque'>('Cash');
   const [showManualInvoiceDialog, setShowManualInvoiceDialog] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [showInvoiceGenerationDialog, setShowInvoiceGenerationDialog] = useState(false);
+  const [selectedServiceForInvoice, setSelectedServiceForInvoice] = useState<any>(null);
 
   const { data: invoices = [], isLoading } = useQuery<Invoice[]>({
     queryKey: ['/api/invoices', statusFilter, paymentFilter, searchQuery],
@@ -93,21 +96,19 @@ export default function Invoices() {
     },
   });
 
-  const manualInvoiceMutation = useMutation({
-    mutationFn: async (customerId: string) => {
-      const response = await apiRequest('POST', `/api/invoices/manual/create`, { customerId });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
-      toast({ title: "Manual invoice created successfully" });
-      setShowManualInvoiceDialog(false);
-      setSelectedCustomerId('');
-    },
-    onError: () => {
-      toast({ title: "Failed to create manual invoice", variant: "destructive" });
-    },
-  });
+  const handleOpenInvoiceGeneration = (customerId: string) => {
+    // Find the completed service for this customer
+    const completedService = completedServices.find(service => service.customerId?._id === customerId);
+    
+    if (!completedService) {
+      toast({ title: "No completed service found for this customer", variant: "destructive" });
+      return;
+    }
+    
+    setSelectedServiceForInvoice(completedService);
+    setShowManualInvoiceDialog(false);
+    setShowInvoiceGenerationDialog(true);
+  };
 
   const approveMutation = useMutation({
     mutationFn: async (invoiceId: string) => {
@@ -813,6 +814,15 @@ export default function Invoices() {
         </DialogContent>
       </Dialog>
 
+      {/* Invoice Generation Dialog */}
+      {selectedServiceForInvoice && (
+        <InvoiceGenerationDialog
+          open={showInvoiceGenerationDialog}
+          onOpenChange={setShowInvoiceGenerationDialog}
+          serviceVisit={selectedServiceForInvoice}
+        />
+      )}
+
       {/* Warranty Cards Dialog */}
       {selectedInvoice && (
         <WarrantyCardDialog
@@ -858,11 +868,11 @@ export default function Invoices() {
               Cancel
             </Button>
             <Button 
-              onClick={() => manualInvoiceMutation.mutate(selectedCustomerId)}
-              disabled={!selectedCustomerId || manualInvoiceMutation.isPending}
+              onClick={() => handleOpenInvoiceGeneration(selectedCustomerId)}
+              disabled={!selectedCustomerId}
               data-testid="button-confirm-manual-invoice"
             >
-              {manualInvoiceMutation.isPending ? "Creating..." : "Create Invoice"}
+              Generate Invoice
             </Button>
           </DialogFooter>
         </DialogContent>
