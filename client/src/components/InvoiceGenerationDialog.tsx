@@ -478,15 +478,24 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                                             {field.value || 'Select product from inventory'}
                                           </SelectValue>
                                         </SelectTrigger>
-                                        <SelectContent>
-                                          <div className="p-2 border-b">
+                                        <SelectContent onOpenAutoFocus={false}>
+                                          <div className="p-2 border-b sticky top-0 bg-background z-50" onClick={(e) => e.stopPropagation()}>
                                             <Input
+                                              autoFocus
                                               placeholder="Search products..."
                                               value={productSearchQueries[index] || ''}
-                                              onChange={(e) => setProductSearchQueries({ ...productSearchQueries, [index]: e.target.value })}
+                                              onChange={(e) => {
+                                                e.stopPropagation();
+                                                setProductSearchQueries({ ...productSearchQueries, [index]: e.target.value });
+                                              }}
+                                              onKeyDown={(e) => {
+                                                e.stopPropagation();
+                                                if (e.key === 'Escape') {
+                                                  e.preventDefault();
+                                                }
+                                              }}
                                               data-testid={`input-product-search-${index}`}
                                               className="h-8"
-                                              onClick={(e) => e.stopPropagation()}
                                             />
                                           </div>
                                           {getFilteredProducts(index).map((product: any) => (
@@ -687,15 +696,24 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                                       {field.value || 'Select product'}
                                     </SelectValue>
                                   </SelectTrigger>
-                                  <SelectContent>
-                                    <div className="p-2 border-b">
+                                  <SelectContent onOpenAutoFocus={false}>
+                                    <div className="p-2 border-b sticky top-0 bg-background z-50" onClick={(e) => e.stopPropagation()}>
                                       <Input
+                                        autoFocus
                                         placeholder="Search products..."
                                         value={productSearchQueries[index] || ''}
-                                        onChange={(e) => setProductSearchQueries({ ...productSearchQueries, [index]: e.target.value })}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          setProductSearchQueries({ ...productSearchQueries, [index]: e.target.value });
+                                        }}
+                                        onKeyDown={(e) => {
+                                          e.stopPropagation();
+                                          if (e.key === 'Escape') {
+                                            e.preventDefault();
+                                          }
+                                        }}
                                         data-testid={`input-product-search-${index}`}
                                         className="h-8"
-                                        onClick={(e) => e.stopPropagation()}
                                       />
                                     </div>
                                     {getFilteredProducts(index).map((product: any) => (
