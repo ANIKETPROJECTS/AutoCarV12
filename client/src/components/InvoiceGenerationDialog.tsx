@@ -459,47 +459,48 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                                 render={({ field }) => (
                                   <FormItem>
                                     {item.type === 'product' ? (
-                                      <div className="space-y-2">
-                                        <Input
-                                          placeholder="Search products..."
-                                          value={productSearchQueries[index] || ''}
-                                          onChange={(e) => setProductSearchQueries({ ...productSearchQueries, [index]: e.target.value })}
-                                          data-testid={`input-product-search-${index}`}
-                                          className="h-8"
-                                        />
-                                        <Select
-                                          value={form.watch(`items.${index}.productId`) || ''}
-                                          onValueChange={(productId) => {
-                                            const selectedProduct = products.find((p: any) => p._id === productId);
-                                            if (selectedProduct) {
-                                              const displayName = selectedProduct.productName || selectedProduct.name || selectedProduct.model || "Unknown";
-                                              field.onChange(displayName);
-                                              form.setValue(`items.${index}.productId`, selectedProduct._id);
-                                              form.setValue(`items.${index}.unitPrice`, selectedProduct.sellingPrice);
-                                              setProductSearchQueries({ ...productSearchQueries, [index]: '' });
-                                              updateItemTotal(index);
-                                            }
-                                          }}
-                                        >
-                                          <SelectTrigger data-testid={`select-product-${index}`}>
-                                            <SelectValue placeholder="Select product from inventory">
-                                              {field.value || 'Select product from inventory'}
-                                            </SelectValue>
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {getFilteredProducts(index).map((product: any) => (
-                                              <SelectItem key={product._id} value={product._id}>
-                                                {product.productName || product.name || product.model || "Unknown"} - ₹{product.sellingPrice} ({product.stockQty} in stock)
-                                              </SelectItem>
-                                            ))}
-                                            {getFilteredProducts(index).length === 0 && (
-                                              <div className="p-2 text-sm text-muted-foreground text-center">
-                                                No matching products in stock
-                                              </div>
-                                            )}
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
+                                      <Select
+                                        value={form.watch(`items.${index}.productId`) || ''}
+                                        onValueChange={(productId) => {
+                                          const selectedProduct = products.find((p: any) => p._id === productId);
+                                          if (selectedProduct) {
+                                            const displayName = selectedProduct.productName || selectedProduct.name || selectedProduct.model || "Unknown";
+                                            field.onChange(displayName);
+                                            form.setValue(`items.${index}.productId`, selectedProduct._id);
+                                            form.setValue(`items.${index}.unitPrice`, selectedProduct.sellingPrice);
+                                            setProductSearchQueries({ ...productSearchQueries, [index]: '' });
+                                            updateItemTotal(index);
+                                          }
+                                        }}
+                                      >
+                                        <SelectTrigger data-testid={`select-product-${index}`}>
+                                          <SelectValue placeholder="Select product from inventory">
+                                            {field.value || 'Select product from inventory'}
+                                          </SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <div className="p-2 border-b">
+                                            <Input
+                                              placeholder="Search products..."
+                                              value={productSearchQueries[index] || ''}
+                                              onChange={(e) => setProductSearchQueries({ ...productSearchQueries, [index]: e.target.value })}
+                                              data-testid={`input-product-search-${index}`}
+                                              className="h-8"
+                                              onClick={(e) => e.stopPropagation()}
+                                            />
+                                          </div>
+                                          {getFilteredProducts(index).map((product: any) => (
+                                            <SelectItem key={product._id} value={product._id}>
+                                              {product.productName || product.name || product.model || "Unknown"} - ₹{product.sellingPrice} ({product.stockQty} in stock)
+                                            </SelectItem>
+                                          ))}
+                                          {getFilteredProducts(index).length === 0 && (
+                                            <div className="p-2 text-sm text-muted-foreground text-center">
+                                              No matching products in stock
+                                            </div>
+                                          )}
+                                        </SelectContent>
+                                      </Select>
                                     ) : (
                                       <Input {...field} placeholder="Service name" data-testid={`input-item-name-${index}`} />
                                     )}
@@ -667,46 +668,48 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                             <FormItem>
                               <FormLabel>Name</FormLabel>
                               {item.type === 'product' ? (
-                                <div className="space-y-2">
-                                  <Input
-                                    placeholder="Search products..."
-                                    value={productSearchQueries[index] || ''}
-                                    onChange={(e) => setProductSearchQueries({ ...productSearchQueries, [index]: e.target.value })}
-                                    data-testid={`input-product-search-${index}`}
-                                  />
-                                  <Select
-                                    value={form.watch(`items.${index}.productId`) || ''}
-                                    onValueChange={(productId) => {
-                                      const selectedProduct = products.find((p: any) => p._id === productId);
-                                      if (selectedProduct) {
-                                        const displayName = selectedProduct.productName || selectedProduct.name || selectedProduct.model || "Unknown";
-                                        field.onChange(displayName);
-                                        form.setValue(`items.${index}.productId`, selectedProduct._id);
-                                        form.setValue(`items.${index}.unitPrice`, selectedProduct.sellingPrice);
-                                        setProductSearchQueries({ ...productSearchQueries, [index]: '' });
-                                        updateItemTotal(index);
-                                      }
-                                    }}
-                                  >
-                                    <SelectTrigger data-testid={`select-product-${index}`}>
-                                      <SelectValue placeholder="Select product">
-                                        {field.value || 'Select product'}
-                                      </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {getFilteredProducts(index).map((product: any) => (
-                                        <SelectItem key={product._id} value={product._id}>
-                                          {product.productName || product.name || product.model || "Unknown"} - ₹{product.sellingPrice}
-                                        </SelectItem>
-                                      ))}
-                                      {getFilteredProducts(index).length === 0 && (
-                                        <div className="p-2 text-sm text-muted-foreground text-center">
-                                          No matching products in stock
-                                        </div>
-                                      )}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
+                                <Select
+                                  value={form.watch(`items.${index}.productId`) || ''}
+                                  onValueChange={(productId) => {
+                                    const selectedProduct = products.find((p: any) => p._id === productId);
+                                    if (selectedProduct) {
+                                      const displayName = selectedProduct.productName || selectedProduct.name || selectedProduct.model || "Unknown";
+                                      field.onChange(displayName);
+                                      form.setValue(`items.${index}.productId`, selectedProduct._id);
+                                      form.setValue(`items.${index}.unitPrice`, selectedProduct.sellingPrice);
+                                      setProductSearchQueries({ ...productSearchQueries, [index]: '' });
+                                      updateItemTotal(index);
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger data-testid={`select-product-${index}`}>
+                                    <SelectValue placeholder="Select product">
+                                      {field.value || 'Select product'}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <div className="p-2 border-b">
+                                      <Input
+                                        placeholder="Search products..."
+                                        value={productSearchQueries[index] || ''}
+                                        onChange={(e) => setProductSearchQueries({ ...productSearchQueries, [index]: e.target.value })}
+                                        data-testid={`input-product-search-${index}`}
+                                        className="h-8"
+                                        onClick={(e) => e.stopPropagation()}
+                                      />
+                                    </div>
+                                    {getFilteredProducts(index).map((product: any) => (
+                                      <SelectItem key={product._id} value={product._id}>
+                                        {product.productName || product.name || product.model || "Unknown"} - ₹{product.sellingPrice}
+                                      </SelectItem>
+                                    ))}
+                                    {getFilteredProducts(index).length === 0 && (
+                                      <div className="p-2 text-sm text-muted-foreground text-center">
+                                        No matching products in stock
+                                      </div>
+                                    )}
+                                  </SelectContent>
+                                </Select>
                               ) : (
                                 <Input {...field} placeholder="Service name" data-testid={`input-item-name-${index}`} />
                               )}
