@@ -478,7 +478,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                                             {field.value || 'Select product from inventory'}
                                           </SelectValue>
                                         </SelectTrigger>
-                                        <SelectContent onOpenAutoFocus={false}>
+                                        <SelectContent onOpenAutoFocus={false} className="w-[300px]">
                                           <div className="p-2 border-b sticky top-0 bg-background z-50" onClick={(e) => e.stopPropagation()}>
                                             <Input
                                               autoFocus
@@ -498,16 +498,18 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                                               className="h-8"
                                             />
                                           </div>
-                                          {getFilteredProducts(index).map((product: any) => (
-                                            <SelectItem key={product._id} value={product._id}>
-                                              {product.productName || product.name || product.model || "Unknown"} - ₹{product.sellingPrice} ({product.stockQty} in stock)
-                                            </SelectItem>
-                                          ))}
-                                          {getFilteredProducts(index).length === 0 && (
-                                            <div className="p-2 text-sm text-muted-foreground text-center">
-                                              No matching products in stock
-                                            </div>
-                                          )}
+                                          <div className="max-h-[300px] overflow-y-auto">
+                                            {getFilteredProducts(index).map((product: any) => (
+                                              <SelectItem key={product._id} value={product._id}>
+                                                {product.productName || product.name || product.model || "Unknown"} - ₹{product.sellingPrice} ({product.stockQty} in stock)
+                                              </SelectItem>
+                                            ))}
+                                            {getFilteredProducts(index).length === 0 && (
+                                              <div className="p-2 text-sm text-muted-foreground text-center">
+                                                No matching products in stock
+                                              </div>
+                                            )}
+                                          </div>
                                         </SelectContent>
                                       </Select>
                                     ) : (
@@ -696,7 +698,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                                       {field.value || 'Select product'}
                                     </SelectValue>
                                   </SelectTrigger>
-                                  <SelectContent onOpenAutoFocus={false}>
+                                  <SelectContent onOpenAutoFocus={false} className="w-[300px]">
                                     <div className="p-2 border-b sticky top-0 bg-background z-50" onClick={(e) => e.stopPropagation()}>
                                       <Input
                                         autoFocus
@@ -716,16 +718,18 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                                         className="h-8"
                                       />
                                     </div>
-                                    {getFilteredProducts(index).map((product: any) => (
-                                      <SelectItem key={product._id} value={product._id}>
-                                        {product.productName || product.name || product.model || "Unknown"} - ₹{product.sellingPrice}
-                                      </SelectItem>
-                                    ))}
-                                    {getFilteredProducts(index).length === 0 && (
-                                      <div className="p-2 text-sm text-muted-foreground text-center">
-                                        No matching products in stock
-                                      </div>
-                                    )}
+                                    <div className="max-h-[300px] overflow-y-auto">
+                                      {getFilteredProducts(index).map((product: any) => (
+                                        <SelectItem key={product._id} value={product._id}>
+                                          {product.productName || product.name || product.model || "Unknown"} - ₹{product.sellingPrice}
+                                        </SelectItem>
+                                      ))}
+                                      {getFilteredProducts(index).length === 0 && (
+                                        <div className="p-2 text-sm text-muted-foreground text-center">
+                                          No matching products in stock
+                                        </div>
+                                      )}
+                                    </div>
                                   </SelectContent>
                                 </Select>
                               ) : (
