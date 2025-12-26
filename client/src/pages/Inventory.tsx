@@ -26,7 +26,7 @@ import { format } from "date-fns";
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("brand-asc");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
   const [isReturnDialogOpen, setIsReturnDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -729,7 +729,7 @@ export default function Inventory() {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {Array.from(new Set(products.map((p: any) => p.category).filter(Boolean))).sort().map((category: any) => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
                   ))}
@@ -746,7 +746,7 @@ export default function Inventory() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {getSortedProducts(products.filter((p: any) => selectedCategory === "" || p.category === selectedCategory)).map((product: any) => (
+                {getSortedProducts(products.filter((p: any) => selectedCategory === "all" || p.category === selectedCategory)).map((product: any) => (
                   <Card key={product._id} className="overflow-hidden hover:shadow-lg transition-shadow" data-testid={`card-product-${product._id}`}>
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between gap-2">
@@ -805,7 +805,7 @@ export default function Inventory() {
                   </Card>
                 ))}
               </div>
-              {products.filter((p: any) => selectedCategory === "" || p.category === selectedCategory).length === 0 && (
+              {products.filter((p: any) => selectedCategory === "all" || p.category === selectedCategory).length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
                   <Package className="h-12 w-12 mx-auto mb-4 opacity-20" />
                   <p>No products found</p>
