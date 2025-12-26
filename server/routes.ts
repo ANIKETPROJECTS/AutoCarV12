@@ -5287,14 +5287,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Add payment to invoice
+  // Add payment to invoice - supports both single and multiple payment methods
   app.post("/api/invoices/:id/payments", requireAuth, requirePermission('invoices', 'update'), async (req, res) => {
     try {
       const userId = (req as any).session.userId;
       const userName = (req as any).session.userName;
       const userRole = (req as any).session.userRole;
       
-      const { amount, paymentMode, transactionId, notes } = req.body;
+      const { payments, notes, totalAmount } = req.body;
       
       const invoice = await Invoice.findById(req.params.id);
       if (!invoice) {
@@ -5305,22 +5305,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Can only add payments to approved invoices" });
       }
       
-      if (amount > invoice.dueAmount) {
+      if (totalAmount > invoice.dueAmount) {
         return res.status(400).json({ error: "Payment amount exceeds due amount" });
       }
       
-      const payment = {
-        amount,
-        paymentMode,
-        transactionId,
-        notes,
-        recordedBy: userId,
-        transactionDate: new Date()
-      };
+      // Handle both array format (multiple payments) and old single payment format
+      const paymentsToAdd = Array.isArray(payments) ? payments : [{ amount: totalAmount, paymentMode: payments?.paymentMode || 'Cash', transactionId: payments?.transactionId }];
       
-      invoice.payments.push(payment as any);
-      invoice.paidAmount += amount;
-      invoice.dueAmount -= amount;
+      let totalPaid = 0;
+      for (const payment of paymentsToAdd) {
+        const paymentEntry = {
+          amount: payment.amount,
+          paymentMode: payment.paymentMode,
+          transactionId: payment.transactionId,
+          notes,
+          recordedBy: userId,
+          transactionDate: new Date()
+        };
+        invoice.payments.push(paymentEntry as any);
+        totalPaid += payment.amount;
+      }
+      
+      invoice.paidAmount += totalPaid;
+      invoice.dueAmount -= totalPaid;
       
       if (invoice.dueAmount === 0) {
         invoice.paymentStatus = 'paid';
@@ -5337,12 +5344,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         action: 'update',
         resource: 'other',
         resourceId: invoice._id.toString(),
-        description: `Recorded payment of ₹${amount} for invoice ${invoice.invoiceNumber}`,
+        description: `Recorded payment of ₹${totalPaid} for invoice ${invoice.invoiceNumber} (${paymentsToAdd.length} payment method${paymentsToAdd.length > 1 ? 's' : ''})`,
         ipAddress: req.ip,
       });
       
       res.json(invoice);
     } catch (error) {
+      console.error('Payment error:', error);
       res.status(500).json({ error: "Failed to add payment" });
     }
   });

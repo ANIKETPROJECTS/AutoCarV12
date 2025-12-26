@@ -14,15 +14,23 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { CreditCard, Smartphone, Banknote, Building, Receipt } from "lucide-react";
+import { CreditCard, Smartphone, Banknote, Building, Receipt, Plus, Trash2 } from "lucide-react";
+
+const paymentEntrySchema = z.object({
+  amount: z.number().min(0.01, "Amount must be greater than 0"),
+  paymentMode: z.enum(['UPI', 'Cash', 'Card', 'Net Banking', 'Cheque']),
+  transactionId: z.string().optional(),
+});
 
 const paymentFormSchema = z.object({
-  amount: z.number().min(0.01, "Amount must be greater than 0"),
-  paymentMode: z.enum(['UPI', 'Cash', 'Card', 'Net Banking', 'Cheque'], {
-    required_error: "Please select a payment mode",
-  }),
-  transactionId: z.string().optional(),
+  payments: z.array(paymentEntrySchema).min(1, "Add at least one payment"),
   notes: z.string().optional(),
+}).refine((data) => {
+  const totalAmount = data.payments.reduce((sum, p) => sum + p.amount, 0);
+  return totalAmount > 0;
+}, {
+  message: "Total payment amount must be greater than 0",
+  path: ["payments"],
 });
 
 type PaymentFormValues = z.infer<typeof paymentFormSchema>;
@@ -48,18 +56,17 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
     defaultValues: {
-      amount: invoice?.dueAmount || 0,
-      paymentMode: 'Cash',
-      transactionId: '',
+      payments: [{ amount: invoice?.dueAmount || 0, paymentMode: 'Cash', transactionId: '' }],
       notes: '',
     },
   });
 
-  const paymentMode = form.watch('paymentMode');
+  const payments = form.watch('payments');
+  const totalPaymentAmount = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
 
   const recordPaymentMutation = useMutation({
     mutationFn: (data: PaymentFormValues) =>
-      apiRequest('POST', `/api/invoices/${invoice._id}/payments`, data),
+      apiRequest('POST', `/api/invoices/${invoice._id}/payments`, { ...data, totalAmount: totalPaymentAmount }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
       toast({ title: "Payment recorded successfully" });
@@ -77,6 +84,14 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
   });
 
   const onSubmit = (data: PaymentFormValues) => {
+    if (totalPaymentAmount > invoice?.dueAmount) {
+      toast({ 
+        title: "Error", 
+        description: `Total payment (₹${totalPaymentAmount.toLocaleString()}) exceeds due amount (₹${invoice?.dueAmount.toLocaleString()})`,
+        variant: "destructive" 
+      });
+      return;
+    }
     recordPaymentMutation.mutate(data);
   };
 
@@ -90,8 +105,6 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
       setShowRazorpay(false);
     }, 2000);
   };
-
-  const selectedMode = PAYMENT_MODES.find(m => m.value === paymentMode);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -123,6 +136,17 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
                   <p className="text-2xl font-bold text-red-600">₹{invoice?.dueAmount.toLocaleString()}</p>
                 </div>
               </div>
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-medium">Total Payment This Time:</p>
+                  <p className={`text-lg font-bold ${totalPaymentAmount > invoice?.dueAmount ? 'text-red-600' : 'text-blue-600'}`}>
+                    ₹{totalPaymentAmount.toLocaleString()}
+                  </p>
+                </div>
+                {totalPaymentAmount > invoice?.dueAmount && (
+                  <p className="text-xs text-red-600 mt-2">Exceeds due amount</p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -130,81 +154,122 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Payment Amount</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        data-testid="input-payment-amount"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Maximum amount: ₹{invoice?.dueAmount.toLocaleString()}
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <FormLabel className="text-base">Payment Methods</FormLabel>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const newPayments = [...(payments || []), { amount: 0, paymentMode: 'Cash' as const, transactionId: '' }];
+                      form.setValue('payments', newPayments);
+                    }}
+                    data-testid="button-add-payment-method"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Payment Method
+                  </Button>
+                </div>
 
-              <FormField
-                control={form.control}
-                name="paymentMode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Payment Mode</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-payment-mode">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {PAYMENT_MODES.map(mode => (
-                          <SelectItem key={mode.value} value={mode.value}>
-                            <div className="flex items-center gap-2">
-                              <mode.icon className={`h-4 w-4 ${mode.color}`} />
-                              {mode.label}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                {payments?.map((payment, index) => {
+                  const modeObj = PAYMENT_MODES.find(m => m.value === payment.paymentMode);
+                  return (
+                    <Card key={index} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-end gap-3">
+                          <FormField
+                            control={form.control}
+                            name={`payments.${index}.amount`}
+                            render={({ field }) => (
+                              <FormItem className="flex-1">
+                                <FormLabel>Amount</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                    data-testid={`input-payment-amount-${index}`}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          {payments.length > 1 && (
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="destructive"
+                              onClick={() => {
+                                const newPayments = payments.filter((_, i) => i !== index);
+                                form.setValue('payments', newPayments);
+                              }}
+                              data-testid={`button-remove-payment-${index}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
 
-              {selectedMode && selectedMode.value !== 'Cash' && (
-                <FormField
-                  control={form.control}
-                  name="transactionId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Transaction ID / Reference Number</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder={
-                            selectedMode.value === 'UPI' ? 'UPI Transaction ID' :
-                            selectedMode.value === 'Card' ? 'Card Transaction ID' :
-                            selectedMode.value === 'Cheque' ? 'Cheque Number' :
-                            'Transaction Reference'
-                          }
-                          data-testid="input-transaction-id"
+                        <FormField
+                          control={form.control}
+                          name={`payments.${index}.paymentMode`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Payment Mode</FormLabel>
+                              <Select value={field.value} onValueChange={field.onChange}>
+                                <FormControl>
+                                  <SelectTrigger data-testid={`select-payment-mode-${index}`}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {PAYMENT_MODES.map(mode => (
+                                    <SelectItem key={mode.value} value={mode.value}>
+                                      <div className="flex items-center gap-2">
+                                        <mode.icon className={`h-4 w-4 ${mode.color}`} />
+                                        {mode.label}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+
+                        {payment.paymentMode !== 'Cash' && (
+                          <FormField
+                            control={form.control}
+                            name={`payments.${index}.transactionId`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Transaction ID / Reference</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    placeholder={
+                                      payment.paymentMode === 'UPI' ? 'UPI Transaction ID' :
+                                      payment.paymentMode === 'Card' ? 'Card Transaction ID' :
+                                      payment.paymentMode === 'Cheque' ? 'Cheque Number' :
+                                      'Transaction Reference'
+                                    }
+                                    data-testid={`input-transaction-id-${index}`}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
 
               <FormField
                 control={form.control}
@@ -233,7 +298,7 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => form.setValue('amount', invoice?.dueAmount || 0)}
+                    onClick={() => form.setValue('payments', [{ amount: invoice?.dueAmount || 0, paymentMode: 'Cash' as const, transactionId: '' }])}
                     data-testid="button-pay-full"
                   >
                     Pay Full Amount (₹{invoice?.dueAmount.toLocaleString()})
@@ -242,38 +307,18 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => form.setValue('amount', Math.round((invoice?.dueAmount || 0) / 2))}
+                    onClick={() => {
+                      const half = Math.round((invoice?.dueAmount || 0) / 2);
+                      form.setValue('payments', [
+                        { amount: half, paymentMode: 'Cash' as const, transactionId: '' },
+                        { amount: (invoice?.dueAmount || 0) - half, paymentMode: 'Cash' as const, transactionId: '' }
+                      ]);
+                    }}
                     data-testid="button-pay-half"
                   >
                     Pay Half (₹{Math.round((invoice?.dueAmount || 0) / 2).toLocaleString()})
                   </Button>
                 </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Online Payment (Demo)</p>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full"
-                  onClick={handleRazorpayPayment}
-                  disabled={showRazorpay}
-                  data-testid="button-razorpay"
-                >
-                  {showRazorpay ? (
-                    "Processing with Razorpay..."
-                  ) : (
-                    <>
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Pay with Razorpay (Demo)
-                    </>
-                  )}
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Note: This is a dummy Razorpay integration for demonstration purposes
-                </p>
               </div>
 
               <DialogFooter>
