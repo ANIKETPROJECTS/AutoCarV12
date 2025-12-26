@@ -69,6 +69,8 @@ export default function Invoices() {
   const [showWarrantyDialog, setShowWarrantyDialog] = useState(false);
   const [showPaymentMethodDialog, setShowPaymentMethodDialog] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'UPI' | 'Cash' | 'Card' | 'Net Banking' | 'Cheque'>('Cash');
+  const [showManualInvoiceDialog, setShowManualInvoiceDialog] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
 
   const { data: invoices = [], isLoading } = useQuery<Invoice[]>({
     queryKey: ['/api/invoices', statusFilter, paymentFilter, searchQuery],
@@ -78,6 +80,27 @@ export default function Invoices() {
       if (paymentFilter !== 'all') params.append('paymentStatus', paymentFilter);
       if (searchQuery) params.append('search', searchQuery);
       return fetch(`/api/invoices?${params}`).then(res => res.json());
+    },
+  });
+
+  const { data: completedServices = [] } = useQuery<any[]>({
+    queryKey: ['/api/service-visits/completed'],
+    queryFn: () => fetch(`/api/service-visits/completed`).then(res => res.json()),
+  });
+
+  const manualInvoiceMutation = useMutation({
+    mutationFn: async (customerId: string) => {
+      const response = await apiRequest('POST', `/api/invoices/manual/create`, { customerId });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
+      toast({ title: "Manual invoice created successfully" });
+      setShowManualInvoiceDialog(false);
+      setSelectedCustomerId('');
+    },
+    onError: () => {
+      toast({ title: "Failed to create manual invoice", variant: "destructive" });
     },
   });
 
@@ -273,11 +296,24 @@ export default function Invoices() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            All Invoices
-          </CardTitle>
-          <CardDescription>View and manage invoices</CardDescription>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              <div>
+                <CardTitle>All Invoices</CardTitle>
+                <CardDescription>View and manage invoices</CardDescription>
+              </div>
+            </div>
+            {(user?.role === 'Admin' || user?.role === 'Manager') && (
+              <Button 
+                onClick={() => setShowManualInvoiceDialog(true)}
+                data-testid="button-create-manual-invoice"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Create Manual Invoice
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-4 flex-wrap">
@@ -781,6 +817,47 @@ export default function Invoices() {
           invoiceNumber={selectedInvoice.invoiceNumber}
         />
       )}
+
+      {/* Manual Invoice Creation Dialog */}
+      <Dialog open={showManualInvoiceDialog} onOpenChange={setShowManualInvoiceDialog}>
+        <DialogContent data-testid="dialog-create-manual-invoice">
+          <DialogHeader>
+            <DialogTitle>Create Manual Invoice</DialogTitle>
+            <DialogDescription>
+              Select a customer whose service is completed to create an invoice
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+              <SelectTrigger data-testid="select-customer-for-invoice">
+                <SelectValue placeholder="Select a customer..." />
+              </SelectTrigger>
+              <SelectContent>
+                {completedServices.map((service: any) => (
+                  <SelectItem key={service.customerId._id} value={service.customerId._id}>
+                    {service.customerId.fullName} - {service.vehicleDetails?.vehicleNumber || 'N/A'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowManualInvoiceDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => manualInvoiceMutation.mutate(selectedCustomerId)}
+              disabled={!selectedCustomerId || manualInvoiceMutation.isPending}
+              data-testid="button-confirm-manual-invoice"
+            >
+              {manualInvoiceMutation.isPending ? "Creating..." : "Create Invoice"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1686,6 +1686,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get completed services for manual invoice creation
+  app.get("/api/service-visits/completed", requireAuth, async (req, res) => {
+    try {
+      const completed = await ServiceVisit.find({ status: 'completed' })
+        .populate('customerId')
+        .populate('vehicleDetails')
+        .lean();
+      res.json(completed);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch completed services" });
+    }
+  });
+
   app.delete("/api/service-visits/:id", requireAuth, requirePermission('orders', 'delete'), async (req, res) => {
     try {
       const visit = await ServiceVisit.findByIdAndDelete(req.params.id);
@@ -4560,6 +4573,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Create invoice from service visit
+  // Create manual invoice
+  app.post("/api/invoices/manual/create", requireAuth, requirePermission('invoices', 'create'), async (req, res) => {
+    try {
+      const { customerId } = req.body;
+      
+      const customer = await RegistrationCustomer.findById(customerId);
+      if (!customer) {
+        return res.status(404).json({ error: "Customer not found" });
+      }
+      
+      // Get first completed service for this customer
+      const serviceVisit = await ServiceVisit.findOne({ 
+        customerId, 
+        status: 'completed' 
+      }).populate('customerId');
+      
+      if (!serviceVisit) {
+        return res.status(404).json({ error: "No completed service found for this customer" });
+      }
+      
+      // Get vehicle
+      const vehicle = await RegistrationVehicle.findOne({ 
+        customerId, 
+        $or: [
+          { vehicleId: serviceVisit.vehicleReg },
+          { vehicleNumber: serviceVisit.vehicleReg }
+        ]
+      }).lean() as any;
+      
+      if (!vehicle) {
+        return res.status(404).json({ error: "Vehicle not found" });
+      }
+      
+      const invoiceSeq = await getNextSequence('invoice');
+      const invoiceNumber = `INV/${new Date().getFullYear()}/${String(invoiceSeq).padStart(4, '0')}`;
+      
+      const invoice = new Invoice({
+        invoiceNumber,
+        customerId,
+        customerDetails: {
+          fullName: customer.fullName,
+          mobileNumber: customer.mobileNumber,
+          email: customer.email,
+          address: customer.address,
+        },
+        vehicleDetails: [{
+          vehicleNumber: vehicle.vehicleNumber,
+          vehicleBrand: vehicle.vehicleBrand,
+          vehicleModel: vehicle.vehicleModel,
+        }],
+        items: [],
+        subtotal: 0,
+        discountAmount: 0,
+        taxAmount: 0,
+        totalAmount: 0,
+        paidAmount: 0,
+        dueAmount: 0,
+        status: 'draft',
+        paymentStatus: 'unpaid',
+        createdBy: (req as any).session.userName || 'System',
+      });
+      
+      await invoice.save();
+      res.json(invoice);
+    } catch (error) {
+      console.error('Error creating manual invoice:', error);
+      res.status(500).json({ error: "Failed to create manual invoice" });
+    }
+  });
+
   app.post("/api/invoices/from-service-visit", requireAuth, requirePermission('invoices', 'create'), async (req, res) => {
     try {
       const userId = (req as any).session.userId;
