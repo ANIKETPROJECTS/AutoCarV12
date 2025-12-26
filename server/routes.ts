@@ -1312,6 +1312,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get completed services for manual invoice creation (must come before :id routes)
+  app.get("/api/service-visits/completed", requireAuth, async (req, res) => {
+    try {
+      const completed = await ServiceVisit.find({ status: 'completed' })
+        .populate('customerId')
+        .lean();
+      res.json(completed);
+    } catch (error) {
+      console.error('Error fetching completed services:', error);
+      res.status(500).json({ error: "Failed to fetch completed services" });
+    }
+  });
+
   // Get suggested products for a service visit based on vehicle's selected parts
   app.get("/api/service-visits/:id/suggested-products", requireAuth, requirePermission('orders', 'read'), async (req, res) => {
     try {
@@ -1683,19 +1696,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('❌ [SERVICE UPDATE] Error:', error);
       res.status(400).json({ error: "Failed to update service visit" });
-    }
-  });
-
-  // Get completed services for manual invoice creation
-  app.get("/api/service-visits/completed", requireAuth, async (req, res) => {
-    try {
-      const completed = await ServiceVisit.find({ status: 'completed' })
-        .populate('customerId')
-        .populate('vehicleDetails')
-        .lean();
-      res.json(completed);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch completed services" });
     }
   });
 

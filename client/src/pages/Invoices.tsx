@@ -85,7 +85,12 @@ export default function Invoices() {
 
   const { data: completedServices = [] } = useQuery<any[]>({
     queryKey: ['/api/service-visits/completed'],
-    queryFn: () => fetch(`/api/service-visits/completed`).then(res => res.json()),
+    queryFn: async () => {
+      const response = await fetch(`/api/service-visits/completed`, { credentials: 'include' });
+      if (!response.ok) return [];
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const manualInvoiceMutation = useMutation({
@@ -833,11 +838,15 @@ export default function Invoices() {
                 <SelectValue placeholder="Select a customer..." />
               </SelectTrigger>
               <SelectContent>
-                {completedServices.map((service: any) => (
-                  <SelectItem key={service.customerId._id} value={service.customerId._id}>
-                    {service.customerId.fullName} - {service.vehicleDetails?.vehicleNumber || 'N/A'}
-                  </SelectItem>
-                ))}
+                {Array.isArray(completedServices) && completedServices.length > 0 ? (
+                  completedServices.map((service: any) => (
+                    <SelectItem key={service.customerId?._id} value={service.customerId?._id || ''}>
+                      {service.customerId?.fullName || 'Unknown'} - {service.vehicleReg || 'N/A'}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="empty" disabled>No completed services available</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
