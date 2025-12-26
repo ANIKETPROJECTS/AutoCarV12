@@ -205,8 +205,7 @@ export default function Invoices() {
       });
     } else {
       setSelectedInvoice(invoice);
-      setSelectedPaymentMethod('Cash');
-      setShowPaymentMethodDialog(true);
+      setShowPaymentDialog(true);
     }
   };
 
