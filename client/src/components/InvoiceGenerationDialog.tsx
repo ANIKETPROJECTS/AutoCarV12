@@ -840,13 +840,18 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                                 {item.hasGst && (
                                   <div className="flex items-center gap-1">
                                     <Input
-                                      type="number"
-                                      min="0"
-                                      max="100"
+                                      type="text"
+                                      inputMode="decimal"
+                                      pattern="[0-9]*\.?[0-9]*"
                                       value={item.gstPercentage || 18}
-                                      onChange={(e) => updateGstPercentage(index, parseFloat(e.target.value) || 18)}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                                          updateGstPercentage(index, val === '' ? 0 : parseFloat(val));
+                                        }
+                                      }}
                                       className="w-16 h-8 text-sm"
-                                      data-testid={`input-gst-percentage-${index}`}
+                                      data-testid={`input-gst-percentage-mobile-${index}`}
                                     />
                                     <span className="text-xs text-muted-foreground">%</span>
                                   </div>
