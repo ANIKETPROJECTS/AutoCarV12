@@ -51,6 +51,7 @@ export default function Products() {
     model: "",
     productName: "",
     productId: "",
+    hsnNumber: "",
     barcode: "",
     barcodeImage: "",
     mrp: "",
@@ -211,6 +212,7 @@ export default function Products() {
       model: "",
       productName: "",
       productId: "",
+      hsnNumber: "",
       barcode: "",
       barcodeImage: "",
       mrp: "",
@@ -318,6 +320,7 @@ export default function Products() {
       brand: product.brand,
       model: product.model || "",
       productName: product.productName || "",
+      hsnNumber: product.hsnNumber || "",
       barcode: product.barcode || "",
       mrp: product.mrp,
       sellingPrice: product.sellingPrice,
@@ -359,6 +362,7 @@ export default function Products() {
           brand: row.brand || row.Brand,
           model: row.model || row.Model || "",
           productName: row.productName || row.ProductName || row.product_name || "",
+          hsnNumber: row.hsnNumber || row.HSNNumber || row.hsn_number || "",
           barcode: row.barcode || row.Barcode || "",
           mrp: row.mrp || row.MRP || 0,
           sellingPrice: row.sellingPrice || row.SellingPrice || row.selling_price || 0,
@@ -436,6 +440,7 @@ export default function Products() {
       model: formData.model,
       productName: formData.productName,
       productId: formData.productId || undefined,
+      hsnNumber: formData.hsnNumber || undefined,
       barcode: formData.barcode,
       barcodeImage: formData.barcodeImage,
       mrp,
@@ -465,6 +470,7 @@ export default function Products() {
       model: product.model || "",
       productName: product.productName || "",
       productId: product.productId || "",
+      hsnNumber: product.hsnNumber || "",
       barcode: product.barcode || "",
       barcodeImage: product.barcodeImage || "",
       mrp: product.mrp?.toString() || "",
@@ -542,6 +548,7 @@ export default function Products() {
         model: formData.model,
         productName: formData.productName,
         productId: formData.productId || undefined,
+        hsnNumber: formData.hsnNumber || undefined,
         barcode: formData.barcode,
         barcodeImage: formData.barcodeImage,
         mrp,
@@ -696,7 +703,7 @@ export default function Products() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="productId">Product ID (Optional)</Label>
+          <Label htmlFor="productId">Product ID</Label>
           <Input
             id="productId"
             value={formData.productId}
@@ -705,6 +712,17 @@ export default function Products() {
             placeholder="e.g., SKU-12345"
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="hsnNumber">Product HSN Number</Label>
+        <Input
+          id="hsnNumber"
+          value={formData.hsnNumber}
+          onChange={(e) => setFormData({ ...formData, hsnNumber: e.target.value })}
+          data-testid="input-product-hsn"
+          placeholder="e.g., 8512.90.20"
+        />
       </div>
 
       <div className="space-y-2">
