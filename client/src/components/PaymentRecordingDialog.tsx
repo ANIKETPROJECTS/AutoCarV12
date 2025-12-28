@@ -186,10 +186,16 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
                                 <FormLabel>Amount</FormLabel>
                                 <FormControl>
                                   <Input
-                                    type="number"
-                                    step="0.01"
+                                    type="text"
+                                    inputMode="decimal"
+                                    pattern="[0-9]*\.?[0-9]*"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                                        field.onChange(val === '' ? 0 : parseFloat(val));
+                                      }
+                                    }}
                                     data-testid={`input-payment-amount-${index}`}
                                   />
                                 </FormControl>
