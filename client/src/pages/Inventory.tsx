@@ -373,29 +373,6 @@ export default function Inventory() {
           <p className="text-muted-foreground mt-1">Track stock movements, manage returns, and monitor inventory levels</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <div className="flex items-center gap-2 mr-2">
-            <div className="relative w-64">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by product, brand or reason..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-                data-testid="input-inventory-search"
-              />
-            </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-40" data-testid="select-inventory-category">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((cat: any) => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <Dialog open={isTransactionDialogOpen} onOpenChange={(open) => {
             setIsTransactionDialogOpen(open);
             if (!open) setProductSearchTerm("");
@@ -722,6 +699,18 @@ export default function Inventory() {
       </div>
 
       <Tabs defaultValue="products" className="space-y-4">
+        <div className="mb-4">
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by product, brand or reason..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+              data-testid="input-inventory-search"
+            />
+          </div>
+        </div>
         <div className="w-full overflow-x-auto">
           <TabsList className="w-full justify-start">
             <TabsTrigger value="products" data-testid="tab-products">Products Catalog</TabsTrigger>
@@ -752,20 +741,6 @@ export default function Inventory() {
                   <SelectItem value="price-high">Price (High to Low)</SelectItem>
                   <SelectItem value="price-low">Price (Low to High)</SelectItem>
                   <SelectItem value="category-asc">Category (A-Z)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex-1 min-w-[200px]">
-              <Label htmlFor="category-filter" className="text-sm text-muted-foreground mb-2 block">Filter by Category</Label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger id="category-filter" className="w-full" data-testid="select-category-filter">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {Array.from(new Set(products.map((p: any) => p.category).filter(Boolean))).sort().map((category: any) => (
-                    <SelectItem key={category} value={category}>{category}</SelectItem>
-                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -849,17 +824,6 @@ export default function Inventory() {
         </TabsContent>
 
         <TabsContent value="transactions" className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search transactions..."
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              data-testid="input-search-transactions"
-            />
-          </div>
-
           <DataTable
             columns={[
               { 
