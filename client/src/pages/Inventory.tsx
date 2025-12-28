@@ -744,6 +744,20 @@ export default function Inventory() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex-1 min-w-[200px]">
+              <Label htmlFor="category-filter" className="text-sm text-muted-foreground mb-2 block">Category</Label>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger id="category-filter" className="w-full" data-testid="select-category-filter">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {Array.from(new Set(products.map((p: any) => p.category).filter(Boolean))).sort().map((category: any) => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <Card>
             <CardHeader>
