@@ -733,7 +733,7 @@ export default function Inventory() {
                 <SelectTrigger id="sort-select" className="w-full" data-testid="select-sort-inventory">
                   <SelectValue placeholder="Select sort option..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" side="bottom" align="start">
                   <SelectItem value="brand-asc">Brand (A-Z)</SelectItem>
                   <SelectItem value="brand-desc">Brand (Z-A)</SelectItem>
                   <SelectItem value="stock-high">Stock Level (High to Low)</SelectItem>
@@ -750,7 +750,7 @@ export default function Inventory() {
                 <SelectTrigger id="category-filter" className="w-full" data-testid="select-category-filter">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" side="bottom" align="start">
                   <SelectItem value="all">All Categories</SelectItem>
                   {Array.from(new Set(products.map((p: any) => p.category).filter(Boolean))).sort().map((category: any) => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
