@@ -62,6 +62,8 @@ export default function Products() {
     warranty: "",
     warrantyCustom: "",
     images: [] as string[],
+    category: "",
+    categoryCustom: "",
     modelCompatibility: [""],
     variants: [{ size: "", color: "", colorCustom: "" }],
   });
@@ -223,6 +225,8 @@ export default function Products() {
       warranty: "",
       warrantyCustom: "",
       images: [],
+      category: "",
+      categoryCustom: "",
       modelCompatibility: [""],
       variants: [{ size: "", color: "", colorCustom: "" }],
     });
@@ -396,11 +400,23 @@ export default function Products() {
     const discount = parseFloat(formData.discount) || 0;
     const stockQty = parseInt(formData.stockQty);
     const minStockLevel = formData.minStockLevel ? parseInt(formData.minStockLevel) : 10;
-    
+
+    const finalWarranty = formData.warranty === 'Other' ? formData.warrantyCustom : formData.warranty;
+    const finalCategory = formData.category === 'Other' ? formData.categoryCustom : formData.category;
+
     if (!formData.brand) {
       toast({
         title: "Validation Error",
         description: "Please enter the brand",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!finalCategory) {
+      toast({
+        title: "Validation Error",
+        description: "Please select or enter a category",
         variant: "destructive",
       });
       return;
@@ -424,8 +440,6 @@ export default function Products() {
       return;
     }
     
-    const finalWarranty = formData.warranty === 'Other' ? formData.warrantyCustom : formData.warranty;
-    
     if (!formData.productName) {
       toast({
         title: "Validation Error",
@@ -443,6 +457,7 @@ export default function Products() {
       hsnNumber: formData.hsnNumber || undefined,
       barcode: formData.barcode,
       barcodeImage: formData.barcodeImage,
+      category: finalCategory,
       mrp,
       sellingPrice,
       discount,
@@ -480,6 +495,8 @@ export default function Products() {
       minStockLevel: product.minStockLevel?.toString() || "",
       warranty: isStandardWarranty ? product.warranty : 'Other',
       warrantyCustom: isStandardWarranty ? '' : (product.warranty || ''),
+      category: product.category || "",
+      categoryCustom: "",
       images: (product.images && product.images.length > 0) ? product.images : [],
       modelCompatibility: (product.modelCompatibility && product.modelCompatibility.length > 0) ? product.modelCompatibility : [""],
       variants: (product.variants && product.variants.length > 0) ? product.variants.map((v: any) => {
@@ -542,6 +559,7 @@ export default function Products() {
 
     if (selectedProduct) {
       const finalWarranty = formData.warranty === 'Other' ? formData.warrantyCustom : formData.warranty;
+      const finalCategory = formData.category === 'Other' ? formData.categoryCustom : formData.category;
       
       const productData = {
         brand: formData.brand,
@@ -551,6 +569,7 @@ export default function Products() {
         hsnNumber: formData.hsnNumber || undefined,
         barcode: formData.barcode,
         barcodeImage: formData.barcodeImage,
+        category: finalCategory,
         mrp,
         sellingPrice,
         discount,
@@ -679,6 +698,35 @@ export default function Products() {
           />
         </div>
         <div className="space-y-2">
+          <Label htmlFor="category">Category *</Label>
+          <Select
+            value={formData.category}
+            onValueChange={(value) => setFormData({ ...formData, category: value })}
+          >
+            <SelectTrigger data-testid="select-category">
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from(new Set(products.map(p => p.category).filter(Boolean))).map((cat: any) => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+              <SelectItem value="Other">Add New Category</SelectItem>
+            </SelectContent>
+          </Select>
+          {formData.category === 'Other' && (
+            <Input
+              value={formData.categoryCustom}
+              onChange={(e) => setFormData({ ...formData, categoryCustom: e.target.value })}
+              placeholder="Enter new category"
+              required
+              data-testid="input-category-custom"
+            />
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
           <Label htmlFor="model">Model</Label>
           <Input
             id="model"
@@ -688,9 +736,6 @@ export default function Products() {
             placeholder="e.g., XL 100, Activa 6G"
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="productName">Product Name *</Label>
           <Input
@@ -700,16 +745,6 @@ export default function Products() {
             required
             data-testid="input-product-name"
             placeholder="Enter product name"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="productId">Product ID</Label>
-          <Input
-            id="productId"
-            value={formData.productId}
-            onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
-            data-testid="input-product-id"
-            placeholder="e.g., SKU-12345"
           />
         </div>
       </div>

@@ -13,6 +13,7 @@ const productSchema = new mongoose.Schema({
   hsnNumber: { type: String },
   barcode: { type: String },
   barcodeImage: { type: String },
+  category: { type: String, required: true },
   modelCompatibility: [String],
   warranty: String,
   mrp: { type: Number, required: true },
