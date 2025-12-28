@@ -26,6 +26,7 @@ const invoiceItemSchema = z.object({
   unitPrice: z.number().min(0, "Price must be positive"),
   total: z.number(),
   hasGst: z.boolean().default(false),
+  gstPercentage: z.number().min(0).max(100).default(18),
   gstAmount: z.number().default(0),
   hasWarranty: z.boolean().default(false),
   warrantyCards: z.array(z.object({
@@ -73,6 +74,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
         unitPrice: 0,
         total: 0,
         hasGst: false,
+        gstPercentage: 18,
         gstAmount: 0,
         hasWarranty: false,
         warrantyCards: [],
@@ -157,6 +159,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
         unitPrice: freshData?.price || part.price || 0,
         total: (part.quantity || 1) * (freshData?.price || part.price || 0),
         hasGst: false,
+        gstPercentage: 18,
         gstAmount: 0,
         hasWarranty: !!(freshData?.warranty || part.productId?.warranty),
         warrantyCards: [],
@@ -188,6 +191,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
         unitPrice: product.price || 0,
         total: product.price || 0,
         hasGst: false,
+        gstPercentage: 18,
         gstAmount: 0,
         hasWarranty: !!product.warranty,
         warrantyCards: [],
@@ -209,6 +213,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
       unitPrice: 0,
       total: 0,
       hasGst: false,
+      gstPercentage: 18,
       gstAmount: 0,
       hasWarranty: false,
       warrantyCards: [],
@@ -292,6 +297,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
         unitPrice: 0,
         total: 0,
         hasGst: false,
+        gstPercentage: 18,
         gstAmount: 0,
         hasWarranty: false,
         warrantyCards: [],
@@ -311,6 +317,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
         unitPrice: 0,
         total: 0,
         hasGst: false,
+        gstPercentage: 18,
         gstAmount: 0,
         hasWarranty: false,
         warrantyCards: [],
@@ -345,7 +352,8 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
     const total = item.unitPrice * item.quantity;
     
     if (item.hasGst) {
-      const gstAmount = total * (18 / 118);
+      const gstPercentage = item.gstPercentage || 18;
+      const gstAmount = total * (gstPercentage / (100 + gstPercentage));
       form.setValue(`items.${index}.gstAmount`, gstAmount, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
       form.setValue(`items.${index}.total`, total, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
     } else {
@@ -360,6 +368,11 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
     const items = form.getValues('items');
     const newHasGst = !items[index].hasGst;
     form.setValue(`items.${index}.hasGst`, newHasGst);
+    updateItemTotal(index);
+  };
+
+  const updateGstPercentage = (index: number, percentage: number) => {
+    form.setValue(`items.${index}.gstPercentage`, percentage);
     updateItemTotal(index);
   };
 
@@ -424,7 +437,8 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                           <TableHead className="min-w-[200px]">Name</TableHead>
                           <TableHead className="min-w-[80px]">Qty</TableHead>
                           <TableHead className="min-w-[120px]">Unit Price</TableHead>
-                          <TableHead className="min-w-[60px]">GST</TableHead>
+                          <TableHead className="min-w-[100px]">GST %</TableHead>
+                          <TableHead className="min-w-[80px]">GST Amount</TableHead>
                           <TableHead className="min-w-[100px]">Total</TableHead>
                           <TableHead className="min-w-[80px]">Warranty</TableHead>
                           <TableHead className="min-w-[60px]"></TableHead>
@@ -575,24 +589,32 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                             </TableCell>
                             <TableCell>
                               {!item.isLabourCharge ? (
-                                <FormField
-                                  control={form.control}
-                                  name={`items.${index}.hasGst`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <input
-                                        type="checkbox"
-                                        checked={field.value}
-                                        onChange={() => toggleGst(index)}
-                                        className="h-4 w-4"
-                                        data-testid={`checkbox-gst-${index}`}
-                                      />
-                                    </FormItem>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={item.hasGst}
+                                    onChange={() => toggleGst(index)}
+                                    className="h-4 w-4"
+                                    data-testid={`checkbox-gst-${index}`}
+                                  />
+                                  {item.hasGst && (
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max="100"
+                                      value={item.gstPercentage || 18}
+                                      onChange={(e) => updateGstPercentage(index, parseFloat(e.target.value) || 18)}
+                                      className="w-16 h-8"
+                                      data-testid={`input-gst-percentage-${index}`}
+                                    />
                                   )}
-                                />
+                                </div>
                               ) : (
                                 <span className="text-muted-foreground">-</span>
                               )}
+                            </TableCell>
+                            <TableCell>
+                              {item.hasGst ? `₹${item.gstAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '-'}
                             </TableCell>
                             <TableCell>₹{item.total.toLocaleString()}</TableCell>
                             <TableCell>
@@ -793,22 +815,43 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                         <div className="flex items-center justify-between">
                           {!item.isLabourCharge && (
                             <div className="flex items-center gap-4">
-                              <FormField
-                                control={form.control}
-                                name={`items.${index}.hasGst`}
-                                render={({ field }) => (
-                                  <FormItem className="flex items-center gap-2">
-                                    <input
-                                      type="checkbox"
-                                      checked={field.value}
-                                      onChange={() => toggleGst(index)}
-                                      className="h-4 w-4"
-                                      data-testid={`checkbox-gst-${index}`}
+                              <div className="flex items-center gap-2">
+                                <FormField
+                                  control={form.control}
+                                  name={`items.${index}.hasGst`}
+                                  render={({ field }) => (
+                                    <FormItem className="flex items-center gap-2">
+                                      <input
+                                        type="checkbox"
+                                        checked={field.value}
+                                        onChange={() => toggleGst(index)}
+                                        className="h-4 w-4"
+                                        data-testid={`checkbox-gst-${index}`}
+                                      />
+                                      <FormLabel className="!mt-0">GST</FormLabel>
+                                    </FormItem>
+                                  )}
+                                />
+                                {item.hasGst && (
+                                  <div className="flex items-center gap-1">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max="100"
+                                      value={item.gstPercentage || 18}
+                                      onChange={(e) => updateGstPercentage(index, parseFloat(e.target.value) || 18)}
+                                      className="w-16 h-8 text-sm"
+                                      data-testid={`input-gst-percentage-${index}`}
                                     />
-                                    <FormLabel className="!mt-0">GST</FormLabel>
-                                  </FormItem>
+                                    <span className="text-xs text-muted-foreground">%</span>
+                                  </div>
                                 )}
-                              />
+                              </div>
+                              {item.hasGst && (
+                                <div className="text-xs">
+                                  <FormLabel className="text-muted-foreground">GST: ₹{item.gstAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</FormLabel>
+                                </div>
+                              )}
                               <FormField
                                 control={form.control}
                                 name={`items.${index}.hasWarranty`}
