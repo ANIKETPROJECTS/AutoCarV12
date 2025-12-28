@@ -70,6 +70,8 @@ export default function Inventory() {
     queryKey: ["/api/products"],
   });
 
+  const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
+
   const { data: lowStockProducts = [] } = useQuery<any[]>({
     queryKey: ["/api/products/low-stock"],
   });
@@ -341,9 +343,17 @@ export default function Inventory() {
 
   const filteredTransactions = transactions.filter((transaction: any) => {
     const productName = transaction.productId?.productName || transaction.productId?.name || transaction.productId?.model || "";
+    const brand = transaction.productId?.brand || "";
+    const category = transaction.productId?.category || "";
     const reason = transaction.reason || "";
-    return productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           reason.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesSearch = productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         reason.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = selectedCategory === "all" || category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
   });
 
   if (transactionsLoading) {
@@ -363,6 +373,29 @@ export default function Inventory() {
           <p className="text-muted-foreground mt-1">Track stock movements, manage returns, and monitor inventory levels</p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <div className="flex items-center gap-2 mr-2">
+            <div className="relative w-64">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by product, brand or reason..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+                data-testid="input-inventory-search"
+              />
+            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-40" data-testid="select-inventory-category">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((cat: any) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Dialog open={isTransactionDialogOpen} onOpenChange={(open) => {
             setIsTransactionDialogOpen(open);
             if (!open) setProductSearchTerm("");
