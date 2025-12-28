@@ -602,7 +602,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                                       type="text"
                                       inputMode="decimal"
                                       pattern="[0-9]*\.?[0-9]*"
-                                      value={item.gstPercentage || 18}
+                                      value={item.gstPercentage === 0 ? '' : item.gstPercentage}
                                       onChange={(e) => {
                                         const val = e.target.value;
                                         if (val === '' || /^\d*\.?\d*$/.test(val)) {
@@ -843,7 +843,7 @@ export function InvoiceGenerationDialog({ open, onOpenChange, serviceVisit }: In
                                       type="text"
                                       inputMode="decimal"
                                       pattern="[0-9]*\.?[0-9]*"
-                                      value={item.gstPercentage || 18}
+                                      value={item.gstPercentage === 0 ? '' : item.gstPercentage}
                                       onChange={(e) => {
                                         const val = e.target.value;
                                         if (val === '' || /^\d*\.?\d*$/.test(val)) {
