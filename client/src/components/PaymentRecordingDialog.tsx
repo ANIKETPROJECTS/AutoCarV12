@@ -108,7 +108,7 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl" data-testid="dialog-record-payment">
+      <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto" data-testid="dialog-record-payment">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
@@ -122,7 +122,7 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
         <div className="space-y-6">
           <Card>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Amount</p>
                   <p className="text-2xl font-bold">₹{invoice?.totalAmount.toLocaleString()}</p>
@@ -155,7 +155,7 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                   <FormLabel className="text-base">Payment Methods</FormLabel>
                   <Button
                     type="button"
@@ -177,7 +177,7 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
                   return (
                     <Card key={index} className="p-4">
                       <div className="space-y-3">
-                        <div className="flex items-end gap-3">
+                        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
                           <FormField
                             control={form.control}
                             name={`payments.${index}.amount`}
@@ -293,11 +293,12 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
 
               <div className="space-y-2">
                 <p className="text-sm font-medium">Quick Payment Options</p>
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="sm:w-auto w-full"
                     onClick={() => form.setValue('payments', [{ amount: invoice?.dueAmount || 0, paymentMode: 'Cash' as const, transactionId: '' }])}
                     data-testid="button-pay-full"
                   >
@@ -307,6 +308,7 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="sm:w-auto w-full"
                     onClick={() => {
                       const half = Math.round((invoice?.dueAmount || 0) / 2);
                       form.setValue('payments', [
@@ -321,12 +323,13 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
                 </div>
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => onOpenChange(false)}
                   data-testid="button-cancel-payment"
+                  className="sm:w-auto w-full"
                 >
                   Cancel
                 </Button>
@@ -334,6 +337,7 @@ export function PaymentRecordingDialog({ open, onOpenChange, invoice }: PaymentR
                   type="submit"
                   disabled={recordPaymentMutation.isPending}
                   data-testid="button-submit-payment"
+                  className="sm:w-auto w-full"
                 >
                   {recordPaymentMutation.isPending ? "Recording..." : "Record Payment"}
                 </Button>
