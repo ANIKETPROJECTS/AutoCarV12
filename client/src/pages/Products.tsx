@@ -323,6 +323,7 @@ export default function Products() {
     const exportData = products.map(product => ({
       brand: product.brand,
       model: product.model || "",
+      productId: product.productId || "",
       productName: product.productName || "",
       category: product.category || "",
       hsnNumber: product.hsnNumber || "",
@@ -366,6 +367,7 @@ export default function Products() {
         const productsData = jsonData.map((row: any) => ({
           brand: row.brand || row.Brand,
           model: row.model || row.Model || "",
+          productId: row.productId || row.ProductId || row.product_id || "",
           productName: row.productName || row.ProductName || row.product_name || "",
           category: row.category || row.Category || "",
           hsnNumber: row.hsnNumber || row.HSNNumber || row.hsn_number || "",
@@ -739,16 +741,27 @@ export default function Products() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="productName">Product Name *</Label>
+          <Label htmlFor="productId">Product ID (Optional)</Label>
           <Input
-            id="productName"
-            value={formData.productName}
-            onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
-            required
-            data-testid="input-product-name"
-            placeholder="Enter product name"
+            id="productId"
+            value={formData.productId}
+            onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
+            data-testid="input-product-id"
+            placeholder="e.g., SKU-12345"
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="productName">Product Name *</Label>
+        <Input
+          id="productName"
+          value={formData.productName}
+          onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+          required
+          data-testid="input-product-name"
+          placeholder="Enter product name"
+        />
       </div>
 
       <div className="space-y-2">
