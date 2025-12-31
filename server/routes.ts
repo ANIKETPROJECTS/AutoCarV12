@@ -4881,14 +4881,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           dueDate: invoice.dueDate,
           customerDetails: invoice.customerDetails,
           vehicleDetails: invoice.vehicleDetails || [],
-          items: invoice.items.map((item: any) => ({
-            name: item.name,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.total,
-            hasGst: item.hasGst,
-            gstAmount: item.gstAmount,
+          items: await Promise.all(invoice.items.map(async (item: any) => {
+            const product = item.productId ? await Product.findById(item.productId).lean() : null;
+            return {
+              name: item.name,
+              hsnNumber: product?.hsnNumber || null,
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.total,
+              hasGst: item.hasGst,
+              gstAmount: item.gstAmount,
+            };
           })),
           subtotal: invoice.subtotal,
           discountType: invoice.discountType,
@@ -5126,14 +5130,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           dueDate: invoice.dueDate,
           customerDetails: invoice.customerDetails,
           vehicleDetails: invoice.vehicleDetails || [],
-          items: invoice.items.map((item: any) => ({
-            name: item.name,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.total,
-            hasGst: item.hasGst,
-            gstAmount: item.gstAmount,
+          items: await Promise.all(invoice.items.map(async (item: any) => {
+            const product = item.productId ? await Product.findById(item.productId).lean() : null;
+            return {
+              name: item.name,
+              hsnNumber: product?.hsnNumber || null,
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.total,
+              hasGst: item.hasGst,
+              gstAmount: item.gstAmount,
+            };
           })),
           subtotal: invoice.subtotal,
           discountType: invoice.discountType,
@@ -5233,14 +5241,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           dueDate: invoice.dueDate,
           customerDetails: invoice.customerDetails,
           vehicleDetails: invoice.vehicleDetails || [],
-          items: invoice.items.map((item: any) => ({
-            name: item.name,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.total,
-            hasGst: item.hasGst,
-            gstAmount: item.gstAmount,
+          items: await Promise.all(invoice.items.map(async (item: any) => {
+            const product = item.productId ? await Product.findById(item.productId).lean() : null;
+            return {
+              name: item.name,
+              hsnNumber: product?.hsnNumber || null,
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.total,
+              hasGst: item.hasGst,
+              gstAmount: item.gstAmount,
+            };
           })),
           subtotal: invoice.subtotal,
           discountType: invoice.discountType,

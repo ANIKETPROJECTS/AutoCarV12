@@ -43,6 +43,7 @@ interface InvoiceData {
   vehicleDetails: VehicleDetails[];
   items: Array<{
     name: string;
+    hsnNumber?: string | null;
     description?: string;
     quantity: number;
     unitPrice: number;
@@ -269,7 +270,8 @@ export async function generateInvoicePDF(invoiceData: InvoiceData): Promise<stri
           doc.font('Helvetica');
         }
 
-        doc.fontSize(10).text(item.name, 50, yPosition, { width: 170 });
+        const displayName = item.hsnNumber ? `${item.name} (${item.hsnNumber})` : item.name;
+        doc.fontSize(10).text(displayName, 50, yPosition, { width: 170 });
         const itemYPosition = yPosition;
         
         if (item.description) {
