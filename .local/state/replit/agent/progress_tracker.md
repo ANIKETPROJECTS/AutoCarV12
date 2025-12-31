@@ -13,4 +13,9 @@
     - Backend: Looks up product HSN and includes in PDF data
     - All 3 invoice generation paths updated
     - Display format: "name (hsnNumber)" when HSN exists
+[x] 11. Remove fallback items from Add Vehicle product section - ✅ COMPLETED
+    - Removed hardcoded standard parts from getPartsByBrandAndModel
+    - Now only shows actual products from inventory
+    - Empty inventory = no fallback items displayed
+    - Updated useEffect to filter out standard parts
 [x] 11. Fix tsx package not found - ✅ Reinstalled tsx, workflow now running properly

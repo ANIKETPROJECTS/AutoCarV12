@@ -279,11 +279,9 @@ export default function CustomerRegistration() {
     enabled: !!selectedBrand && !!selectedModel && (selectedModel !== "Other" || !!customModelValue),
   });
 
-  // Merge standard parts with compatible products whenever they change
+  // Show only actual products from inventory - no fallback items
   useEffect(() => {
     if (selectedModel && selectedModel !== "Other") {
-      const standardParts = getPartsByBrandAndModel(selectedBrand, selectedModel);
-      
       // Transform compatible products to match the part format
       const productParts = compatibleProducts.map((product: any) => ({
         id: `product-${product._id}`,
@@ -295,8 +293,8 @@ export default function CustomerRegistration() {
         stockQty: product.stockQty,
       }));
       
-      // Combine both lists
-      setAvailableParts([...standardParts, ...productParts]);
+      // Only show actual products from inventory
+      setAvailableParts(productParts);
     }
   }, [selectedBrand, selectedModel, compatibleProducts]);
 
