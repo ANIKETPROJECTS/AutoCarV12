@@ -5126,69 +5126,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Download invoice PDF (authenticated)
   app.get("/api/invoices/:id/pdf", requireAuth, async (req, res) => {
     try {
+      console.log('\n' + '='.repeat(80));
+      console.log('📥 AUTHENTICATED PDF DOWNLOAD REQUEST');
+      console.log('='.repeat(80));
+      console.log('   Invoice ID:', req.params.id);
+      console.log('   Timestamp:', new Date().toISOString());
+      
+      console.log('\n1️⃣ Fetching invoice from database...');
       const invoice = await Invoice.findById(req.params.id).populate('serviceVisitId');
       if (!invoice) {
+        console.log('❌ Invoice not found:', req.params.id);
         return res.status(404).json({ error: "Invoice not found" });
       }
+      console.log('✅ Invoice found:', invoice.invoiceNumber);
+      console.log('   Total Items:', invoice.items?.length || 0);
+      console.log('   Items:', JSON.stringify(invoice.items.map((i: any) => ({ name: i.name, productId: i.productId })), null, 2));
       
       let pdfPath = invoice.pdfPath;
+      console.log('\n2️⃣ Checking if PDF already exists...');
+      console.log('   Stored PDF path:', pdfPath);
+      console.log('   Path exists:', pdfPath ? fs.existsSync(pdfPath) : false);
       
       if (!pdfPath || !fs.existsSync(pdfPath)) {
-        // Fetch HSN numbers for all products
-        const hsnMap = new Map<string, string | null>();
+        console.log('\n3️⃣ PDF not found, generating new one...');
         
-        for (const item of invoice.items) {
-          if (item.productId && !hsnMap.has(item.productId.toString())) {
-            const product = await Product.findById(item.productId).lean();
-            hsnMap.set(item.productId.toString(), product?.hsnNumber || null);
+        try {
+          // Fetch HSN numbers for all products
+          console.log('   📌 Building HSN map...');
+          const hsnMap = new Map<string, string | null>();
+          
+          for (const item of invoice.items) {
+            console.log(`   📍 Processing item: "${item.name}" (ID: ${item.productId})`);
+            if (item.productId && !hsnMap.has(item.productId.toString())) {
+              try {
+                console.log(`   🔍 Looking up Product in DB: ${item.productId}`);
+                const product = await Product.findById(item.productId).lean();
+                console.log(`   ✅ Product found: ${product?.name}, HSN: ${product?.hsnNumber || 'NONE'}`);
+                hsnMap.set(item.productId.toString(), product?.hsnNumber || null);
+              } catch (lookupError) {
+                console.error(`   ❌ Error looking up product ${item.productId}:`, lookupError instanceof Error ? lookupError.message : String(lookupError));
+                hsnMap.set(item.productId.toString(), null);
+              }
+            } else {
+              console.log(`   ⏭️ Skipping item (no productId or already in map)`);
+            }
           }
+          console.log(`   ✅ HSN map built with ${hsnMap.size} entries`);
+
+          console.log('\n   4️⃣ Building PDF data object...');
+          const pdfData = {
+            invoiceNumber: invoice.invoiceNumber,
+            createdAt: invoice.createdAt,
+            dueDate: invoice.dueDate,
+            customerDetails: invoice.customerDetails,
+            vehicleDetails: invoice.vehicleDetails || [],
+            items: invoice.items.map((item: any) => {
+              const hsnValue = item.productId ? hsnMap.get(item.productId.toString()) : null;
+              console.log(`   📝 Mapping item "${item.name}" with HSN: ${hsnValue}`);
+              return {
+                name: item.name,
+                hsnNumber: hsnValue,
+                description: item.description,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                total: item.total,
+                hasGst: item.hasGst,
+                gstAmount: item.gstAmount,
+              };
+            }),
+            subtotal: invoice.subtotal,
+            discountType: invoice.discountType,
+            discountValue: invoice.discountValue,
+            discountAmount: invoice.discountAmount,
+            taxRate: invoice.taxRate,
+            taxAmount: invoice.taxAmount,
+            totalAmount: invoice.totalAmount,
+            paidAmount: invoice.paidAmount,
+            dueAmount: invoice.dueAmount,
+            notes: invoice.notes,
+            terms: invoice.terms,
+          };
+          console.log('   ✅ PDF data object created');
+
+          console.log('\n   5️⃣ Generating PDF file...');
+          pdfPath = await generateInvoicePDF(pdfData);
+          console.log('   ✅ PDF generated:', pdfPath);
+          
+          console.log('\n   6️⃣ Saving PDF path to invoice record...');
+          invoice.pdfPath = pdfPath;
+          await invoice.save();
+          console.log('   ✅ Invoice saved with PDF path');
+        } catch (pdfGenError) {
+          console.error('\n   ❌ PDF generation failed:');
+          console.error('      Error Type:', pdfGenError?.constructor?.name);
+          console.error('      Error Message:', pdfGenError instanceof Error ? pdfGenError.message : String(pdfGenError));
+          console.error('      Full Error:', JSON.stringify(pdfGenError, null, 2));
+          throw pdfGenError;
         }
-
-        const pdfData = {
-          invoiceNumber: invoice.invoiceNumber,
-          createdAt: invoice.createdAt,
-          dueDate: invoice.dueDate,
-          customerDetails: invoice.customerDetails,
-          vehicleDetails: invoice.vehicleDetails || [],
-          items: invoice.items.map((item: any) => ({
-            name: item.name,
-            hsnNumber: item.productId ? hsnMap.get(item.productId.toString()) : null,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.total,
-            hasGst: item.hasGst,
-            gstAmount: item.gstAmount,
-          })),
-          subtotal: invoice.subtotal,
-          discountType: invoice.discountType,
-          discountValue: invoice.discountValue,
-          discountAmount: invoice.discountAmount,
-          taxRate: invoice.taxRate,
-          taxAmount: invoice.taxAmount,
-          totalAmount: invoice.totalAmount,
-          paidAmount: invoice.paidAmount,
-          dueAmount: invoice.dueAmount,
-          notes: invoice.notes,
-          terms: invoice.terms,
-        };
-
-        pdfPath = await generateInvoicePDF(pdfData);
-        invoice.pdfPath = pdfPath;
-        await invoice.save();
       }
       
+      console.log('\n7️⃣ Streaming PDF to client...');
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${invoice.invoiceNumber.replace(/\//g, '_')}.pdf"`);
       
       const fileStream = fs.createReadStream(pdfPath);
       fileStream.on('error', (error) => {
-        console.error('File stream error:', error);
+        console.error('❌ File stream error:', error);
         res.status(500).json({ error: "Failed to stream PDF" });
+      });
+      fileStream.on('end', () => {
+        console.log('✅ PDF streamed successfully');
+        console.log('='.repeat(80) + '\n');
       });
       fileStream.pipe(res);
     } catch (error) {
-      console.error('PDF download error:', error);
+      console.error('\n❌ AUTHENTICATED PDF DOWNLOAD ERROR:');
+      console.error('   Error Type:', error?.constructor?.name);
+      console.error('   Error Message:', error instanceof Error ? error.message : String(error));
+      console.error('   Full Error:', JSON.stringify(error, null, 2));
+      console.error('   Stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.log('='.repeat(80) + '\n');
       res.status(500).json({ error: "Failed to download PDF" });
     }
   });
