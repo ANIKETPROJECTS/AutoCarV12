@@ -13,3 +13,4 @@
     - Backend: Looks up product HSN and includes in PDF data
     - All 3 invoice generation paths updated
     - Display format: "name (hsnNumber)" when HSN exists
+[x] 11. Fix tsx package not found - ✅ Reinstalled tsx, workflow now running properly
