@@ -24,3 +24,11 @@
     - Shows helpful message when no compatible products available
     - Message guides users to check inventory or mark products as compatible
     - This helps with debugging product compatibility issues
+
+[x] 13. Fix customer ID collision bug when customers are deleted - ✅ COMPLETED
+    - Problem: Used countDocuments() to generate IDs, caused collisions when customers deleted
+    - Solution: Query for the highest existing customer ID and increment from there
+    - Implementation: Find last customer with matching state code, extract numeric part, increment
+    - Now works correctly even if customers are deleted (e.g., delete CUST-00001, new customer gets CUST-00003, not CUST-00002)
+    - Changed from: `const customerCount = await RegistrationCustomer.countDocuments()`
+    - Changed to: Find max ID per state and increment from actual highest, not document count

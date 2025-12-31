@@ -3789,8 +3789,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       const stateCode = stateCodeMap[validatedData.state] || validatedData.state.substring(0, 2).toUpperCase();
-      const customerCount = await RegistrationCustomer.countDocuments();
-      const referenceCode = `CUST-${stateCode}-${String(customerCount + 1).padStart(6, '0')}`;
+      
+      // Get the highest customer number for this state to avoid ID collisions when customers are deleted
+      const lastCustomer = await RegistrationCustomer.findOne({ 
+        referenceCode: new RegExp(`^CUST-${stateCode}-`) 
+      }).sort({ referenceCode: -1 });
+      
+      let nextNumber = 1;
+      if (lastCustomer && lastCustomer.referenceCode) {
+        // Extract the numeric part from reference code (e.g., "CUST-MH-000001" -> 1)
+        const parts = lastCustomer.referenceCode.split('-');
+        if (parts[2]) {
+          const lastNumber = parseInt(parts[2], 10);
+          nextNumber = lastNumber + 1;
+        }
+      }
+      
+      const referenceCode = `CUST-${stateCode}-${String(nextNumber).padStart(6, '0')}`;
       
       // Generate OTP
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
