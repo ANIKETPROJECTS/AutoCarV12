@@ -4875,25 +4875,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate PDF
       console.log('📄 Starting PDF generation...');
       try {
+        const items = await Promise.all(invoice.items.map(async (item: any) => {
+          const product = item.productId ? await Product.findById(item.productId).lean() : null;
+          return {
+            name: item.name,
+            hsnNumber: product?.hsnNumber || null,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+            hasGst: item.hasGst,
+            gstAmount: item.gstAmount,
+          };
+        }));
+
         const pdfData = {
           invoiceNumber: invoice.invoiceNumber,
           createdAt: invoice.createdAt,
           dueDate: invoice.dueDate,
           customerDetails: invoice.customerDetails,
           vehicleDetails: invoice.vehicleDetails || [],
-          items: await Promise.all(invoice.items.map(async (item: any) => {
-            const product = item.productId ? await Product.findById(item.productId).lean() : null;
-            return {
-              name: item.name,
-              hsnNumber: product?.hsnNumber || null,
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              total: item.total,
-              hasGst: item.hasGst,
-              gstAmount: item.gstAmount,
-            };
-          })),
+          items,
           subtotal: invoice.subtotal,
           discountType: invoice.discountType,
           discountValue: invoice.discountValue,
@@ -5124,25 +5126,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let pdfPath = invoice.pdfPath;
       
       if (!pdfPath || !fs.existsSync(pdfPath)) {
+        const items = await Promise.all(invoice.items.map(async (item: any) => {
+          const product = item.productId ? await Product.findById(item.productId).lean() : null;
+          return {
+            name: item.name,
+            hsnNumber: product?.hsnNumber || null,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+            hasGst: item.hasGst,
+            gstAmount: item.gstAmount,
+          };
+        }));
+
         const pdfData = {
           invoiceNumber: invoice.invoiceNumber,
           createdAt: invoice.createdAt,
           dueDate: invoice.dueDate,
           customerDetails: invoice.customerDetails,
           vehicleDetails: invoice.vehicleDetails || [],
-          items: await Promise.all(invoice.items.map(async (item: any) => {
-            const product = item.productId ? await Product.findById(item.productId).lean() : null;
-            return {
-              name: item.name,
-              hsnNumber: product?.hsnNumber || null,
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              total: item.total,
-              hasGst: item.hasGst,
-              gstAmount: item.gstAmount,
-            };
-          })),
+          items,
           subtotal: invoice.subtotal,
           discountType: invoice.discountType,
           discountValue: invoice.discountValue,
@@ -5235,25 +5239,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let pdfPath = invoice.pdfPath;
       
       if (!pdfPath || !fs.existsSync(pdfPath)) {
+        const items = await Promise.all(invoice.items.map(async (item: any) => {
+          const product = item.productId ? await Product.findById(item.productId).lean() : null;
+          return {
+            name: item.name,
+            hsnNumber: product?.hsnNumber || null,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+            hasGst: item.hasGst,
+            gstAmount: item.gstAmount,
+          };
+        }));
+
         const pdfData = {
           invoiceNumber: invoice.invoiceNumber,
           createdAt: invoice.createdAt,
           dueDate: invoice.dueDate,
           customerDetails: invoice.customerDetails,
           vehicleDetails: invoice.vehicleDetails || [],
-          items: await Promise.all(invoice.items.map(async (item: any) => {
-            const product = item.productId ? await Product.findById(item.productId).lean() : null;
-            return {
-              name: item.name,
-              hsnNumber: product?.hsnNumber || null,
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              total: item.total,
-              hasGst: item.hasGst,
-              gstAmount: item.gstAmount,
-            };
-          })),
+          items,
           subtotal: invoice.subtotal,
           discountType: invoice.discountType,
           discountValue: invoice.discountValue,
