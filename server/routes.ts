@@ -3790,22 +3790,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const stateCode = stateCodeMap[validatedData.state] || validatedData.state.substring(0, 2).toUpperCase();
       
-      // Get the highest customer number for this state to avoid ID collisions when customers are deleted
-      const lastCustomer = await RegistrationCustomer.findOne({ 
-        referenceCode: new RegExp(`^CUST-${stateCode}-`) 
-      }).sort({ referenceCode: -1 });
+      // Generate reference code by finding the next available number (reuse deleted IDs)
+      const customerCount = await RegistrationCustomer.countDocuments({ referenceCode: new RegExp(`^CUST-${stateCode}-`) });
+      let nextNumber = customerCount + 1;
+      let referenceCode = `CUST-${stateCode}-${String(nextNumber).padStart(6, '0')}`;
       
-      let nextNumber = 1;
-      if (lastCustomer && lastCustomer.referenceCode) {
-        // Extract the numeric part from reference code (e.g., "CUST-MH-000001" -> 1)
-        const parts = lastCustomer.referenceCode.split('-');
-        if (parts[2]) {
-          const lastNumber = parseInt(parts[2], 10);
-          nextNumber = lastNumber + 1;
-        }
+      // Check if this ID already exists (in case of deletions), if so try next numbers
+      while (await RegistrationCustomer.findOne({ referenceCode })) {
+        nextNumber++;
+        referenceCode = `CUST-${stateCode}-${String(nextNumber).padStart(6, '0')}`;
       }
-      
-      const referenceCode = `CUST-${stateCode}-${String(nextNumber).padStart(6, '0')}`;
       
       // Generate OTP
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
