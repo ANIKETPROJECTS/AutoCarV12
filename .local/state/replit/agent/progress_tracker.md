@@ -18,4 +18,9 @@
     - Now only shows actual products from inventory
     - Empty inventory = no fallback items displayed
     - Updated useEffect to filter out standard parts
-[x] 11. Fix tsx package not found - ✅ Reinstalled tsx, workflow now running properly
+[x] 12. Show parts section even when no compatible products found - ✅ COMPLETED
+    - Removed `availableParts.length > 0` condition from rendering
+    - Section now always displays when a vehicle model is selected
+    - Shows helpful message when no compatible products available
+    - Message guides users to check inventory or mark products as compatible
+    - This helps with debugging product compatibility issues

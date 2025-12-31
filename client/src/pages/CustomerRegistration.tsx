@@ -1339,7 +1339,7 @@ export default function CustomerRegistration() {
                     />
                   )}
 
-                  {selectedModel && selectedModel !== "Other" && availableParts.length > 0 && (
+                  {selectedModel && selectedModel !== "Other" && (
                     <FormField
                       control={vehicleForm.control}
                       name="selectedParts"
@@ -1351,170 +1351,184 @@ export default function CustomerRegistration() {
                               Select parts and quantities needed for this vehicle
                             </p>
                           </div>
-                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                            {/* Products Grid - Left Side */}
-                            <div className="lg:col-span-2">
-                              {/* Search Bar and Toggle */}
-                              <div className="mb-3 space-y-2">
-                                <div className="relative">
-                                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                  <Input
-                                    type="text"
-                                    placeholder="Search parts by name or category..."
-                                    value={partSearchTerm}
-                                    onChange={(e) => setPartSearchTerm(e.target.value)}
-                                    className="pl-10"
-                                    data-testid="input-search-parts"
-                                  />
+                          
+                          {availableParts.length === 0 ? (
+                            <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
+                              <CardContent className="p-6 text-center">
+                                <p className="text-sm text-amber-900 dark:text-amber-100 font-medium">
+                                  No compatible products available for this vehicle model
+                                </p>
+                                <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
+                                  Please check your inventory or mark products as compatible with {selectedBrand} - {selectedModel}
+                                </p>
+                              </CardContent>
+                            </Card>
+                          ) : (
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                              {/* Products Grid - Left Side */}
+                              <div className="lg:col-span-2">
+                                {/* Search Bar and Toggle */}
+                                <div className="mb-3 space-y-2">
+                                  <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                    <Input
+                                      type="text"
+                                      placeholder="Search parts by name or category..."
+                                      value={partSearchTerm}
+                                      onChange={(e) => setPartSearchTerm(e.target.value)}
+                                      className="pl-10"
+                                      data-testid="input-search-parts"
+                                    />
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setIsProductListExpanded(!isProductListExpanded)}
+                                    className="w-full gap-2"
+                                    data-testid="button-toggle-product-list"
+                                  >
+                                    {isProductListExpanded ? (
+                                      <>
+                                        <ChevronUp className="w-4 h-4" />
+                                        Hide All Products
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ChevronDown className="w-4 h-4" />
+                                        Show All Products
+                                      </>
+                                    )}
+                                  </Button>
                                 </div>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setIsProductListExpanded(!isProductListExpanded)}
-                                  className="w-full gap-2"
-                                  data-testid="button-toggle-product-list"
-                                >
-                                  {isProductListExpanded ? (
-                                    <>
-                                      <ChevronUp className="w-4 h-4" />
-                                      Hide All Products
-                                    </>
-                                  ) : (
-                                    <>
-                                      <ChevronDown className="w-4 h-4" />
-                                      Show All Products
-                                    </>
-                                  )}
-                                </Button>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 max-h-[500px] overflow-y-auto border rounded-lg p-3 bg-muted/20">
-                                {availableParts
-                                  .filter((part) => {
-                                    if (isProductListExpanded) return true;
-                                    if (!partSearchTerm) return false;
-                                    const searchLower = partSearchTerm.toLowerCase();
+                                <div className="grid grid-cols-2 gap-2 max-h-[500px] overflow-y-auto border rounded-lg p-3 bg-muted/20">
+                                  {availableParts
+                                    .filter((part) => {
+                                      if (isProductListExpanded) return true;
+                                      if (!partSearchTerm) return false;
+                                      const searchLower = partSearchTerm.toLowerCase();
+                                      return (
+                                        part.name.toLowerCase().includes(searchLower) ||
+                                        part.category.toLowerCase().includes(searchLower)
+                                      );
+                                    })
+                                    .map((part) => {
+                                    const quantity = getPartQuantity(part.id);
+                                    
                                     return (
-                                      part.name.toLowerCase().includes(searchLower) ||
-                                      part.category.toLowerCase().includes(searchLower)
-                                    );
-                                  })
-                                  .map((part) => {
-                                  const quantity = getPartQuantity(part.id);
-                                  
-                                  return (
-                                    <Card key={part.id} className="hover-elevate">
-                                      <CardContent className="p-3">
-                                        <div className="flex flex-col gap-2">
-                                          <div className="flex-1">
-                                            <p className="text-sm font-medium line-clamp-2">{part.name}</p>
-                                            <p className="text-xs text-muted-foreground">{part.category}</p>
-                                          </div>
-                                          {quantity === 0 ? (
-                                            <Button
-                                              type="button"
-                                              size="sm"
-                                              variant="outline"
-                                              className="w-full"
-                                              onClick={() => updatePartQuantity(part.id, 1)}
-                                              data-testid={`button-add-${part.id}`}
-                                            >
-                                              Add
-                                            </Button>
-                                          ) : (
-                                            <div className="flex items-center gap-1 border rounded-md">
-                                              <Button
-                                                type="button"
-                                                size="icon"
-                                                variant="ghost"
-                                                className="h-7 w-7"
-                                                onClick={() => decrementPartQuantity(part.id)}
-                                                data-testid={`button-decrement-${part.id}`}
-                                              >
-                                                -
-                                              </Button>
-                                              <span className="flex-1 text-center text-sm font-semibold" data-testid={`quantity-${part.id}`}>{quantity}</span>
-                                              <Button
-                                                type="button"
-                                                size="icon"
-                                                variant="ghost"
-                                                className="h-7 w-7"
-                                                onClick={() => incrementPartQuantity(part.id)}
-                                                data-testid={`button-increment-${part.id}`}
-                                              >
-                                                +
-                                              </Button>
-                                            </div>
-                                          )}
-                                        </div>
-                                      </CardContent>
-                                    </Card>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {/* Cart - Right Side */}
-                            <div className="lg:col-span-1">
-                              <Card className="sticky top-4">
-                                <CardHeader className="pb-3">
-                                  <CardTitle className="text-base flex items-center gap-2">
-                                    <span>Selected Parts</span>
-                                    <span className="text-sm font-normal text-muted-foreground">
-                                      ({vehicleForm.watch("selectedParts")?.length || 0})
-                                    </span>
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-3">
-                                  <div className="max-h-[400px] overflow-y-auto space-y-2">
-                                    {vehicleForm.watch("selectedParts")?.length > 0 ? (
-                                      vehicleForm.watch("selectedParts").map((selectedPart) => {
-                                        const part = availableParts.find(p => p.id === selectedPart.partId);
-                                        if (!part) return null;
-                                        
-                                        return (
-                                          <div key={selectedPart.partId} className="flex items-center gap-2 p-2 border rounded-md bg-background">
-                                            <div className="flex-1 min-w-0">
-                                              <p className="text-sm font-medium truncate">{part.name}</p>
+                                      <Card key={part.id} className="hover-elevate">
+                                        <CardContent className="p-3">
+                                          <div className="flex flex-col gap-2">
+                                            <div className="flex-1">
+                                              <p className="text-sm font-medium line-clamp-2">{part.name}</p>
                                               <p className="text-xs text-muted-foreground">{part.category}</p>
                                             </div>
-                                            <div className="flex items-center gap-1 border rounded-md flex-shrink-0">
+                                            {quantity === 0 ? (
                                               <Button
                                                 type="button"
-                                                size="icon"
-                                                variant="ghost"
-                                                className="h-6 w-6"
-                                                onClick={() => decrementPartQuantity(selectedPart.partId)}
-                                                data-testid={`button-cart-decrement-${selectedPart.partId}`}
+                                                size="sm"
+                                                variant="outline"
+                                                className="w-full"
+                                                onClick={() => updatePartQuantity(part.id, 1)}
+                                                data-testid={`button-add-${part.id}`}
                                               >
-                                                -
+                                                Add
                                               </Button>
-                                              <span className="text-xs font-semibold px-1" data-testid={`cart-quantity-${selectedPart.partId}`}>{selectedPart.quantity}</span>
-                                              <Button
-                                                type="button"
-                                                size="icon"
-                                                variant="ghost"
-                                                className="h-6 w-6"
-                                                onClick={() => incrementPartQuantity(selectedPart.partId)}
-                                                data-testid={`button-cart-increment-${selectedPart.partId}`}
-                                              >
-                                                +
-                                              </Button>
-                                            </div>
+                                            ) : (
+                                              <div className="flex items-center gap-1 border rounded-md">
+                                                <Button
+                                                  type="button"
+                                                  size="icon"
+                                                  variant="ghost"
+                                                  className="h-7 w-7"
+                                                  onClick={() => decrementPartQuantity(part.id)}
+                                                  data-testid={`button-decrement-${part.id}`}
+                                                >
+                                                  -
+                                                </Button>
+                                                <span className="flex-1 text-center text-sm font-semibold" data-testid={`quantity-${part.id}`}>{quantity}</span>
+                                                <Button
+                                                  type="button"
+                                                  size="icon"
+                                                  variant="ghost"
+                                                  className="h-7 w-7"
+                                                  onClick={() => incrementPartQuantity(part.id)}
+                                                  data-testid={`button-increment-${part.id}`}
+                                                >
+                                                  +
+                                                </Button>
+                                              </div>
+                                            )}
                                           </div>
-                                        );
-                                      })
-                                    ) : (
-                                      <div className="text-center py-8 text-muted-foreground">
-                                        <p className="text-sm">No parts selected</p>
-                                        <p className="text-xs mt-1">Add parts from the left</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                </CardContent>
-                              </Card>
+                                        </CardContent>
+                                      </Card>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Cart - Right Side */}
+                              <div className="lg:col-span-1">
+                                <Card className="sticky top-4">
+                                  <CardHeader className="pb-3">
+                                    <CardTitle className="text-base flex items-center gap-2">
+                                      <span>Selected Parts</span>
+                                      <span className="text-sm font-normal text-muted-foreground">
+                                        ({vehicleForm.watch("selectedParts")?.length || 0})
+                                      </span>
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="p-3">
+                                    <div className="max-h-[400px] overflow-y-auto space-y-2">
+                                      {vehicleForm.watch("selectedParts")?.length > 0 ? (
+                                        vehicleForm.watch("selectedParts").map((selectedPart) => {
+                                          const part = availableParts.find(p => p.id === selectedPart.partId);
+                                          if (!part) return null;
+                                          
+                                          return (
+                                            <div key={selectedPart.partId} className="flex items-center gap-2 p-2 border rounded-md bg-background">
+                                              <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium truncate">{part.name}</p>
+                                                <p className="text-xs text-muted-foreground">{part.category}</p>
+                                              </div>
+                                              <div className="flex items-center gap-1 border rounded-md flex-shrink-0">
+                                                <Button
+                                                  type="button"
+                                                  size="icon"
+                                                  variant="ghost"
+                                                  className="h-6 w-6"
+                                                  onClick={() => decrementPartQuantity(selectedPart.partId)}
+                                                  data-testid={`button-cart-decrement-${selectedPart.partId}`}
+                                                >
+                                                  -
+                                                </Button>
+                                                <span className="text-xs font-semibold px-1" data-testid={`cart-quantity-${selectedPart.partId}`}>{selectedPart.quantity}</span>
+                                                <Button
+                                                  type="button"
+                                                  size="icon"
+                                                  variant="ghost"
+                                                  className="h-6 w-6"
+                                                  onClick={() => incrementPartQuantity(selectedPart.partId)}
+                                                  data-testid={`button-cart-increment-${selectedPart.partId}`}
+                                                >
+                                                  +
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          );
+                                        })
+                                      ) : (
+                                        <div className="text-center py-8 text-muted-foreground">
+                                          <p className="text-sm">No parts selected</p>
+                                          <p className="text-xs mt-1">Add parts from the left</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              </div>
                             </div>
-                          </div>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
