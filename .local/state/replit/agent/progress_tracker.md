@@ -7,3 +7,4 @@
 [x] 7. Update export function to include Product ID - ✅ Export now includes productId
 [x] 8. Update import function to include Product ID - ✅ Import now handles productId
 [x] 9. Reinstall npm packages and restart workflow - ✅ tsx now works, app running successfully
+[x] 10. Add HSN number display in invoice - ✅ Completed: formatProductName helper added, all 4 product display locations updated to show HSN in front of product name
