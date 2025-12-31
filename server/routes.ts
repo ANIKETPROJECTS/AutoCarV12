@@ -4875,19 +4875,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate PDF
       console.log('📄 Starting PDF generation...');
       try {
-        const items = await Promise.all(invoice.items.map(async (item: any) => {
-          const product = item.productId ? await Product.findById(item.productId).lean() : null;
-          return {
-            name: item.name,
-            hsnNumber: product?.hsnNumber || null,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.total,
-            hasGst: item.hasGst,
-            gstAmount: item.gstAmount,
-          };
-        }));
+        // Fetch HSN numbers for all products in invoice items
+        console.log('   Fetching HSN numbers for products...');
+        const hsnMap = new Map<string, string | null>();
+        
+        for (const item of invoice.items) {
+          if (item.productId && !hsnMap.has(item.productId.toString())) {
+            const product = await Product.findById(item.productId).lean();
+            hsnMap.set(item.productId.toString(), product?.hsnNumber || null);
+          }
+        }
+        
+        console.log(`   Found HSN data for ${hsnMap.size} products`);
 
         const pdfData = {
           invoiceNumber: invoice.invoiceNumber,
@@ -4895,7 +4894,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           dueDate: invoice.dueDate,
           customerDetails: invoice.customerDetails,
           vehicleDetails: invoice.vehicleDetails || [],
-          items,
+          items: invoice.items.map((item: any) => ({
+            name: item.name,
+            hsnNumber: item.productId ? hsnMap.get(item.productId.toString()) : null,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+            hasGst: item.hasGst,
+            gstAmount: item.gstAmount,
+          })),
           subtotal: invoice.subtotal,
           discountType: invoice.discountType,
           discountValue: invoice.discountValue,
@@ -5126,19 +5134,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let pdfPath = invoice.pdfPath;
       
       if (!pdfPath || !fs.existsSync(pdfPath)) {
-        const items = await Promise.all(invoice.items.map(async (item: any) => {
-          const product = item.productId ? await Product.findById(item.productId).lean() : null;
-          return {
-            name: item.name,
-            hsnNumber: product?.hsnNumber || null,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.total,
-            hasGst: item.hasGst,
-            gstAmount: item.gstAmount,
-          };
-        }));
+        // Fetch HSN numbers for all products
+        const hsnMap = new Map<string, string | null>();
+        
+        for (const item of invoice.items) {
+          if (item.productId && !hsnMap.has(item.productId.toString())) {
+            const product = await Product.findById(item.productId).lean();
+            hsnMap.set(item.productId.toString(), product?.hsnNumber || null);
+          }
+        }
 
         const pdfData = {
           invoiceNumber: invoice.invoiceNumber,
@@ -5146,7 +5150,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           dueDate: invoice.dueDate,
           customerDetails: invoice.customerDetails,
           vehicleDetails: invoice.vehicleDetails || [],
-          items,
+          items: invoice.items.map((item: any) => ({
+            name: item.name,
+            hsnNumber: item.productId ? hsnMap.get(item.productId.toString()) : null,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+            hasGst: item.hasGst,
+            gstAmount: item.gstAmount,
+          })),
           subtotal: invoice.subtotal,
           discountType: invoice.discountType,
           discountValue: invoice.discountValue,
@@ -5239,19 +5252,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let pdfPath = invoice.pdfPath;
       
       if (!pdfPath || !fs.existsSync(pdfPath)) {
-        const items = await Promise.all(invoice.items.map(async (item: any) => {
-          const product = item.productId ? await Product.findById(item.productId).lean() : null;
-          return {
-            name: item.name,
-            hsnNumber: product?.hsnNumber || null,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.total,
-            hasGst: item.hasGst,
-            gstAmount: item.gstAmount,
-          };
-        }));
+        // Fetch HSN numbers for all products
+        const hsnMap = new Map<string, string | null>();
+        
+        for (const item of invoice.items) {
+          if (item.productId && !hsnMap.has(item.productId.toString())) {
+            const product = await Product.findById(item.productId).lean();
+            hsnMap.set(item.productId.toString(), product?.hsnNumber || null);
+          }
+        }
 
         const pdfData = {
           invoiceNumber: invoice.invoiceNumber,
@@ -5259,7 +5268,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           dueDate: invoice.dueDate,
           customerDetails: invoice.customerDetails,
           vehicleDetails: invoice.vehicleDetails || [],
-          items,
+          items: invoice.items.map((item: any) => ({
+            name: item.name,
+            hsnNumber: item.productId ? hsnMap.get(item.productId.toString()) : null,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+            hasGst: item.hasGst,
+            gstAmount: item.gstAmount,
+          })),
           subtotal: invoice.subtotal,
           discountType: invoice.discountType,
           discountValue: invoice.discountValue,
